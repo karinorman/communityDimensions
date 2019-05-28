@@ -2,6 +2,7 @@ detach("package:boral",unload=T) ## get rid of old boral if you have it
 library(here)
 
 load(here::here("data", "bryophytes.rda"))
+## source file originally from: https://github.com/guiblanchet/HMSC/blob/master/data/bryophytes.rda
 
 J <- 30 ## downsample to make things faster
 N <- 150
