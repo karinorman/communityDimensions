@@ -1,8 +1,7 @@
 detach("package:boral",unload=T) ## get rid of old boral if you have it
+library(here)
 
-wd = "" ## where you have bryophytes stored
-setwd(wd)
-load(file="bryophytes.rda")
+load(here::here("data", "bryophytes.rda"))
 
 J <- 30 ## downsample to make things faster
 N <- 150
