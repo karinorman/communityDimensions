@@ -34,6 +34,8 @@ names(mpost)
 
 ## these outputs are gnarly but the names match the hierarchy schematic in Figure 4 of Ovaskainen et al '17 Ecology Letters.
 
+library(dplyr)
+
 summary(mpost$Beta)$statistics %>% dim() ## 5 covariates, each species gets a set
 summary(mpost$Beta)$statistics %>% head()
 
