@@ -43,7 +43,7 @@ library(devtools)
 install_github("sastoudt/boral",  ref = "ppc") ## my version that gives you posterior predictive information
 require(boral)
 
-#ptm <- proc.time()
+ptm <- proc.time()
 mod <- boral(newY,newX[,-1],family="binomial",lv.control=list(num.lv=2),save.model = TRUE,row.eff = "fixed")
 proc.time() - ptm  ## 919.882 15 minutes ish
 
@@ -56,3 +56,31 @@ proc.time() - ptm  ## 919.882 15 minutes ish
 names(mod)
 
 ## I added yP, yStarP, ZP, ZStarP
+
+#### tidying ####
+library(dplyr)
+library(tidyr)
+
+data <- as.data.frame(bryophytes$Y) ## wide
+
+data$site <- 1:nrow(data)
+
+tallData <- data %>% gather(-site, key = "species", value = "obsOccur")
+
+head(tallData)
+
+## now it's easy to group by site, species, etc.
+
+## can do the same thing for predicted values
+
+predVal <- predict(mod)
+names(predVal)
+
+pred <- as.data.frame(predVal$linpred)
+names(pred) <- colnames(newY)
+pred$site <- 1:nrow(pred)
+tallPred <- pred %>% gather(-site, key = "species", value = "predVal")
+
+tallPred$predVal <- pnorm(tallPred$predVal) ## transform from linear predictor scale to probability
+
+head(tallPred)
