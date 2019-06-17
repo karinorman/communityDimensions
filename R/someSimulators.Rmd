@@ -1,0 +1,499 @@
+---
+title: "Simulating community data"
+author: "Ben Goldstein"
+date: "6/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(magrittr)
+library(tidyverse)
+library(boral)
+library(fields)
+```
+
+# tl;dr
+
+I looked at some methods of simulating community data and compared what they can do.
+
+Simulator               | Latent variables | Explicit covariance  | Notes
+-------------           | -------------    | ------------- | -------------
+AHMbook::simComm()      | One at a time    | No            | Overly simple, probably not useful
+basicSimulationSetup.R  | Yes (covariates) | Yes           | Developed by Sara
+The Community Simulator | Yes, sort of     | Yes, sort of  | Dynamic & mechanistic microbial model. Computes stable states.
+coenocliner             | Yes (covariates) | No            | Basic multispecies model generation from n covariates, with choice of mixture.
+Code from Harris 2016   | Yes | Yes, interactions | Taken from [here](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.1605)
+Code from Zurell et al 2018 | No | Yes | Two-species simulator for testing explicit interactions. Taken from [here](https://onlinelibrary.wiley.com/doi/full/10.1111/ecog.03315)
+
+# Comparison
+
+### AHMbook::simCom()
+
+This is a function associated with the Royle and Kéry book "Applied Hierarchical Modeling in Ecology."
+
+Simulates some really basic multispecies data with detection probabilities. One covariate for habitat and detection, no interaction. Very basic.
+
+```{r}
+suppressMessages(library(AHMbook))
+set.seed(10001)
+
+# Run the simulator
+ahm_commdat <- simComm(type = "counts", nsite = 20, nrep = 3, nspec = 10, 
+                       sig.beta.lp = 0.3,
+                       show.plot = T)
+
+# Gather results into nspec x nsite matrix of mean counts
+mean_spec_cts <- list()
+for (i in 1:ahm_commdat$nspec) {
+  mean_spec_cts[[i]] <- rowMeans(ahm_commdat$y.obs[,,i])
+}
+
+# Gather for plotting and plot
+(mean_spec_cts <- do.call("cbind", mean_spec_cts) %>% 
+                  data.frame() %>% 
+                  mutate(site = row_number()) %>% 
+                  gather(key = "species", value = "avg_count", -site)) %>% 
+                  ggplot() + geom_raster(aes(x = species, y = site, fill = log(avg_count)))
+
+```
+
+
+### basicSimulationSetup.R
+
+This is Sara's code. It's centered around generating a precision matrix (inverse of covariance matrix) based on sparsity and signal.
+
+The function to produce the precision matrix:
+
+```{r}
+makePrecisionMat <- function(sparsity, signal, J) {
+  precision.mat <- diag(J)
+  precision.mat[upper.tri(precision.mat)] <- signal * (runif(J * (J - 1) / 2) < sparsity)
+  precision.mat <- precision.mat + t(precision.mat)
+
+  ## Check Pos-Def
+  eig <- eigen(precision.mat)
+  # print(sum(eig$values>0))
+
+  if (sum(eig$values > 0) < J) {
+    precision.mat <- nearPD(precision.mat) ## adjust if need be
+    eig <- eigen(precision.mat$mat)
+    # print(sum(eig$values>0))
+    return(precision.mat$mat)
+  } else {
+    eig <- eigen(precision.mat)
+    # print(sum(eig$values>0))
+    return(precision.mat)
+  }
+}
+
+```
+
+```{r}
+J <- 15 ## species
+N <- 50 ## sites
+
+library(Matrix)
+library(MASS)
+
+#### with sparse interaction covariance ####
+set.seed(4419)
+
+cov <- as.matrix(runif(N, -5, 5), ncol = 1) ## value of covariate by site
+
+beta0 <- as.matrix(seq(-8, 8, length.out = J), nrow = 1) ## intercept, drives prevalence
+beta1 <- as.matrix(rnorm(J, 5, 7), nrow = 1) ## slope
+
+# means as driven by the covariate
+muLinear <- mapply(function(x, y) { x + y * cov }, 
+                   beta0, beta1)
+
+# generate a precision matrix to specify covariates
+speciesPrec <- makePrecisionMat(sparsity = 0.2, signal = 0.5, J)
+
+# For each of N sites, draw a multivariate normal random sample with means
+# driven by linear relationship to covar and specified interaction matrix.
+samp <- do.call("rbind", lapply(1:N, function(x) {
+  mvrnorm(n = 1, mu = muLinear[x, ], Sigma = solve(speciesPrec))
+}))
+
+# Get probabilities of detection from samp from a normal distribution
+sampN <- pnorm(samp)
+
+newX <- cov
+
+newY <- matrix(unlist(lapply(c(sampN), function(x) {
+  rbinom(1, 1, x)
+})), nrow = nrow(sampN), byrow = F)
+
+newY %>% data.frame() %>% mutate(site = row_number()) %>%
+  set_colnames(c(paste0("X", str_pad(1:J, 2, "left", "0")), "site")) %>% 
+  gather(key = "species", value = "present", -site) %>% 
+  mutate(present = as.logical(present)) %>% 
+  ggplot() + geom_raster(aes(x = species, y = site, fill = present)) +
+  scale_fill_manual(values = c("#1C366A", "#E43034"))
+```
+
+Species abundances in this simulation are driven by species' relationships to a covariate and a precision matrix. Could easily be modified to include more covariates, unmeasured covariates, etc. 
+
+This code checks a lot of boxes we were interested in: tuneable sparcity and signal of interactions, parameterized knobs (number of species, sites, etc.)
+
+We could benefit from modifying this to generate abundance instead of P/A.
+
+### The Community Simulator
+
+The Community Simulator is a python package, so I can't include it here. I threw a quick example into the reop, but it'll be at least as useful to link to [their paper](https://www.biorxiv.org/content/10.1101/613836v1) and [tutorial](https://github.com/Emergent-Behaviors-in-Biology/community-simulator/blob/master/Tutorial.ipynb).
+
+The Community Simulator is an object-oriented software build around Community objects. It uses a pretty complex model of microbial ecology to populate and propagate a set of microbial communities based on the (apparently) common 96-well experimental design. 
+
+The basic architecture is as follows.
+
+A `Community` object 
+
+* has 3 main properties:
+  * **State**. Two data frames, population of all species in all wells and resources available in all wells.
+  * **Dynamics**. A set of differential equations giving laws of population dynamics. Can be specified manually, or generated based on a set of input assumptions.
+  * **Parameters**. 
+* and 3 main methods:
+  * *Propagate(T)* advances the simulation T timesteps
+  * *Passage(**f**)* builds a replacement plate. **f** is a matrix giving the fractions of each previous plate added to the new plate.
+  * SteadyState() calculates the equilibrium point.
+
+This package is very different than the sort of thing Sara set up. It generates populations from a set of reasonable assumptions and determines equilibria. It is the only simulator I've looked at whose data are ecologically "meaningful" in some sense. It has all sorts of more complex knobs we could play with: leakage, generalist species vs. specialist species families, communities at equilibrium vs. not at equilibrium, etc. (Some of these would definitely require more digging into before using.)
+
+
+### coenocliner
+
+`coenocliner` is a package for simulating multispecies data. This package provides tools similar to AHMbook::simComm, but makes it easier for multiple covariates to be included.
+
+This package is useful in that it has built-in imperfect detection forms; you can sample from any of a number of distributions.
+
+Also, species have Gaussian responses to covariates.
+
+```{r}
+library(coenocliner)
+
+set.seed(2)
+
+M <- 20                                    # number of species
+ming <- 3.5                                # gradient minimum...
+maxg <- 7                                  # ...and maximum
+locs <- seq(ming, maxg, length = 100)      # gradient locations
+opt  <- runif(M, min = ming, max = maxg)   # species optima
+tol  <- rep(0.25, M)                       # species tolerances
+h    <- ceiling(rlnorm(M, meanlog = 3))    # max abundances
+pars <- cbind(opt = opt, tol = tol, h = h) # put in a matrix
+
+simp <- coenocline(locs, responseModel = "gaussian", params = pars,
+                   countModel = "poisson")
+matplot(locs, simp, lty = "solid", type = "p", pch = 1:10, cex = 0.8,
+        xlab = "pH", ylab = "Abundance")
+```
+
+```{r}
+set.seed(10)
+N <- 30                                           # number of samples
+M <- 20                                           # number of species
+## First gradient
+ming1 <- 3.5                                      # 1st gradient minimum...
+maxg1 <- 7                                        # ...and maximum
+loc1 <- seq(ming1, maxg1, length = N)             # 1st gradient locations
+opt1 <- runif(M, min = ming1, max = maxg1)        # species optima
+tol1 <- rep(0.5, M)                               # species tolerances
+h    <- ceiling(rlnorm(M, meanlog = 3))           # max abundances
+par1 <- cbind(opt = opt1, tol = tol1, h = h)      # put in a matrix
+## Second gradient
+ming2 <- 1                                        # 2nd gradient minimum...
+maxg2 <- 100                                      # ...and maximum
+loc2 <- seq(ming2, maxg2, length = N)             # 2nd gradient locations
+opt2 <- runif(M, min = ming2, max = maxg2)        # species optima
+tol2 <- ceiling(runif(M, min = 5, max = 50))      # species tolerances
+par2 <- cbind(opt = opt2, tol = tol2)             # put in a matrix
+## Last steps...
+pars <- list(px = par1, py = par2)                # put parameters into a list
+locs <- expand.grid(x = loc1, y = loc2)           # put gradient locations together
+
+mu2d <- coenocline(locs, responseModel = "gaussian",
+                   params = pars, extraParams = list(corr = 0.5),
+                   expectation = TRUE)
+
+layout(matrix(1:4, ncol = 2))
+op <- par(mar = rep(1, 4))
+for (i in c(2,8,13,19)) {
+    persp(loc1, loc2, matrix(mu2d[, i], ncol = length(loc2)),
+          ticktype = "detailed", zlab = "Abundance",
+          theta = 45, phi = 30)
+}
+par(op)
+layout(1)
+
+sim2d <- coenocline(locs, responseModel = "gaussian",
+                    params = pars, extraParams = list(corr = 0.5),
+                    countModel = "negbin", countParams = list(alpha = 1))
+
+layout(matrix(1:4, ncol = 2))
+op <- par(mar = rep(1, 4))
+for (i in c(2,8,13,19)) {
+    persp(loc1, loc2, matrix(sim2d[, i], ncol = length(loc2)),
+          ticktype = "detailed", zlab = "Abundance",
+          theta = 45, phi = 30)
+}
+par(op)
+layout(1)
+
+image(cor(sim2d))
+```
+
+### Code from Harris 2016
+
+We read [Harris (2016)](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.1605), who used Markov networks to evaluate co-occurrence. 
+
+This setup uses Gibbs sampling to create multispecies occurrence data from some parameters.
+
+```{r}
+make_coefficients = function(n_spp, p_neg, mean_alpha){
+  # Exponential distribution has lots of mass near 0 but has
+  # a long tail.
+  true_beta_magnitudes = rexp(choose(n_spp, 2), rate = 1)
+  # Multiply some proportion of the interactions
+  # by -1
+  b = true_beta_magnitudes * sample(
+    c(-1, 1),
+    size = length(true_beta_magnitudes),
+    prob = c(p_neg, 1 - p_neg),
+    replace = TRUE
+  )
+  # Species' intercepts are normally distributed
+  a = rnorm(n_spp, mean_alpha)
+  # Return the simulated values.
+  # The rosalia function stores pairwise parameters in the upper
+  # triangle of an n-by-n matrix and stores the species intercepts
+  # along the diagonal, so these values are named accordingly.
+  c(alpha = a, beta = b)
+}
+
+simulate_data = function(n_spp, n_sites, rep_name, n_gibbs, n_env, sd, f,
+                         rdist, p_neg, mean_alpha, write_out = F){
+# n_spp: number of species to include in the landscape
+# n_sites: number of sites to include in the landscape
+# rep_name: an identifier to use for the landscape replicate
+# n_gibbs: number of Gibbs samples to perform
+# n_env: number of environmental variables to simulate
+# sd: standard deviation of environmental variables (can be zero)
+# f: inverse link function (see above for two examples)
+# rdist: a function for sampling a random value from a distribution
+# p_neg: proportion of negative interactions (e.g. competition)
+# mean_alpha: the intercept value for the average species
+# Determine the "true" parameters for the simulated assemblage
+  par = make_coefficients(n_spp, p_neg, mean_alpha)
+# "True" interaction strengths, to save for later
+  truth = par[-(1:n_spp)]
+# "True" intercepts, possibly adjusted below by environment
+  alpha = par[1:n_spp]
+# Turn the interaction values into an n-by-n matrix
+# Start with empty matrix; fill in upper triangle;
+# then fill in lower triangle with its transpose
+  beta = matrix(0, n_spp, n_spp)
+  beta[upper.tri(beta)] = truth
+  beta = beta + t(beta)
+# Environmental states are normally distributed with mean=0 and sd=1
+  env = matrix(rnorm(n_sites * n_env), ncol = n_env)
+  alpha_env = matrix(rnorm(n_spp * n_env, sd = sd), nrow = n_env)
+# Simulate the landscape from known process with Gibbs sampling
+# Landscape starts as if betas were all zero. Each species' occurrence
+# probability or abundance depends on its alpha value and on the
+# environment (assuming alpha_env is not set to zero).
+  x = matrix(
+    f(rep(1, n_sites) %*% t(alpha) + env %*% alpha_env),
+    nrow = n_sites,
+    ncol = n_spp
+  )
+# Gibbs sampling
+  for(i in 1:n_gibbs){
+# Each round of Gibbs sampling updates one species (column) across all sites
+# according to its conditional probability (i.e. conditional on environment
+# and the other species that are present).
+    for(j in 1:n_spp){
+      x[,j] = rdist(
+        nrow(x),
+        f(x %*% beta[ , j] + alpha[j] + env %*% alpha_env[,j])
+      )
+    }
+  }
+  
+# Collapse abundance data to presence/absence and store
+# it as integer values rather than true/false
+  x = x > 0
+  mode(x) = "integer"
+  colnames(x) = paste0("V", 1:n_spp)
+# Save the results in a "fake data" folder
+  file_stem = paste(n_sites, rep_name, sep = "-")
+# Gotelli and Ulrich's Pairs software rejects empty sites, so I remove them here
+  x_subset = x[rowSums(x) != 0, colSums(x) != 0]
+# Save the matrix of presence/absence observations
+
+  if (write_out) {  
+    write.csv(
+      x,
+      file = paste0("../fakedata/matrices/", file_stem, ".csv")
+    )
+  # Gotelli and Ulrich's Pairs method expects the data matrices to be transposed,
+  # So I save them separately
+    write.table(
+      t(x_subset),
+      file = paste0("../fakedata/matrices/", file_stem, "-transposed.txt"),
+      quote = FALSE
+    )
+  # Save the "true" species interactions
+    write(
+      truth,
+      file = paste0("../fakedata/truths/", file_stem, ".txt"),
+      ncolumns = length(truth)
+    )
+  }
+  return(list(x = x,
+         x_subset = x_subset,
+         truth = truth))
+}
+
+
+# Define a convenience function for Bernoulli random samples
+rbern = function(n, prob) {
+  rbinom(n = n, size = 1, prob = prob)
+}
+
+n_spp <- 20
+n_sites <- 100
+set.seed(1)
+sim <- simulate_data(
+        n_spp = n_spp,
+        n_sites = n_sites,
+        n_gibbs = 1000,
+        n_env = 2,
+        rep_name = "env_1",
+        sd = 2,
+        f = function(x){log(1 + exp(x))},
+        rdist = rpois,
+        p_neg = 1,
+        mean_alpha = 5
+      )
+
+image(sim$x, xlab = "site", ylab = "species")
+```
+
+
+### Code from Zurell et al 2018
+
+Simulates co-occurrence of two interacting species.
+
+```{r}
+# code for simulating co-occurrence of two interacting species following Araujo & Rozenfeld (2014)
+# L: number of sites
+# rhoA: prevalence of A
+# rhoB: prevalence of B
+# Ia: interaction force on A
+# Ib: interaction force on B
+# output = 'all' include plotting of landscape
+# output = 'cooccAB' only outputs the co-occurrence index
+# output = 'cooccAB.null" outputs co-occurrence index and a T/F value indicating correspondence of rhoAB with null expectation
+
+sim.Dist <- function(L = 100, rhoA = 0.3, rhoB = 0.3, Ia = 0, Ib = 0, 
+                      output = 'all', agg = NULL) {
+# currently not considered: spatial autocorrelation, exclusive ranges
+  land = matrix(1, nrow = L, ncol = L)
+#---------------------------------------------------------------------------------------
+
+  n.A.cur = 0 # current number of ind A in landscape
+  n.A.target = floor(rhoA * L^2) # expected number of ind A in landscape given prevalence rhoA
+  n.A.ToTarget = n.A.target - n.A.cur
+# randomly distribute species A
+  land[sample(seq_len(prod(dim(land)))[land == 1], n.A.ToTarget)] = 2
+#---------------------------------------------------------------------------------------
+  
+  n.B.cur = 0
+  n.B.target = floor(rhoB * L^2)
+#---------------------------------------------------------------------------------------
+
+# calculate amount of co-occurrence cells according to eqs. 3-5
+  rhoAB.null = rhoA * rhoB
+  if (Ia > 0) {
+    if (Ib > 0) {
+  # (+/+)
+      rhoAB = rhoA * rhoB + max(Ia,Ib) * (min(rhoA,rhoB) - rhoA*rhoB )
+    } else {
+  # (+/-)
+      rhoAB = (rhoA * rhoB + Ia * (min(rhoA,rhoB) - rhoA * rhoB) ) * (1+Ib)
+    }
+  } else {
+    if (Ib > 0) {
+  # (-/+)
+      rhoAB = (rhoA * rhoB + Ib * (min(rhoA,rhoB) - rhoA * rhoB) ) * (1+Ia)
+    } else {
+  # (-/-)
+      rhoAB = rhoA * rhoB * (1 + min(Ia,Ib))
+    }
+  }
+  n.AB.target = rhoAB * L^2
+#---------------------------------------------------------------------------------------
+
+# randomly sample co-occurrence cells and cells only occupied by species B
+  land[sample(seq_len(prod(dim(land)))[land == 2], n.AB.target)] = 4
+  n.B.cur = sum(land == 4)
+  n.B.ToTarget = n.B.target - n.B.cur
+# randomly distribute species B
+  land[sample(seq_len(prod(dim(land)))[land == 1], n.B.ToTarget)] = 3
+  cooccAB = sum(land == 4) / (sum(land == 3) + sum(land == 2) + sum(land == 4))
+#---------------------------------------------------------------------------------------
+# spatial dependence?
+  if (!is.null(agg)) {
+    require(raster)
+    agg.land = function(agg.y) {
+      land.r = raster(land, xmn = 0, xmx = L, ymn = 0, ymx = L)
+      aggregate(land.r,agg.y,function(x,...){
+        ifelse(4 %in% x, 4,
+               ifelse(2 %in% x & 3 %in% x, 4, max(x))
+        )
+      })
+    }
+    agg.land.true = function(agg.y) {
+      land.r = raster(land, xmn = 0, xmx = L, ymn = 0, ymx = L)
+      aggregate(land.r, agg.y, function(x,...){
+        ifelse(4 %in% x, 4, max(x))
+        })
+    }
+    agg.l = lapply(agg,function(agg.y){agg.land(agg.y)})
+    names(agg.l) = paste0('agg',agg)
+    agg.l.true = lapply(agg,function(agg.y){agg.land.true(agg.y)})
+    names(agg.l.true) = paste0('agg',agg)
+  }
+#---------------------------------------------------------------------------------------
+# output
+  if (output =='all') {
+  # require(fields)
+  #
+    print(image.plot(land, col = c('white','grey60','grey30','red'),
+                     breaks = c(.5,1.5,2.5,3.5,4.5), axes = F,
+                     axis.args = list(at = 1:4, labels = c('Empty','A','B','A & B'))))
+      
+    if (is.null(agg)) {
+      return(list(rhoAB = rhoAB, rhoAB.null = rhoAB.null, coocc = cooccAB, land = land)) 
+    } else {
+      return(list(rhoAB = rhoAB, rhoAB.null = rhoAB.null, coocc = cooccAB, land = land,
+                  land.agg = lapply(agg.l, 
+                                    function(x){
+                                        data.frame(coordinates(x), cells = values(x))
+                                    }), 
+                  land.agg.true = lapply(agg.l.true,
+                                         function(x){ 
+                                           data.frame(coordinates(x), cells = values(x))
+                                          })
+                )
+             )
+    }  
+  } else if (output == 'cooccAB') return(cooccAB) 
+  else if (output == 'cooccAB.null') return(list(coocc = cooccAB, null = rhoAB/rhoAB.null))
+}
+  
+examp <- sim.Dist(rhoA = 0.5, rhoB = 0.5, Ia = 0, Ib = 0, output = 'all', agg = c(2,4))
+```
+
