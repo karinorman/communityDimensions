@@ -1,0 +1,40 @@
+---
+title: "PERMANOVA"
+author: "Kari Norman"
+date: "6/6/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(vegan)
+library(tidyverse)
+
+load("data/bryophytes.rda")
+
+occ <- as.data.frame(bryophytes$Y)
+covar <- as.data.frame(bryophytes$X) %>%
+  mutate(site = rownames(.)) %>%
+  left_join(as.data.frame(bryophytes$Random) %>% mutate(site = paste0("site", random1)), by = "site") %>%
+  select(-site) %>%
+  rename(tree = random1, site = random2)
+  
+
+traits <- as.data.frame(bryophytes$Tr)
+phylo <- as.data.frame(bryophytes$Phylo)
+```
+
+```{r}
+
+mod <- adonis2(occ ~ log_diam + tree, data = covar, permutations = 999, method="bray")
+mod  
+
+mod2 <- adonis2(occ ~ log_diam + site/tree, data = covar, permutations = 999, method="bray", strata = "site")
+mod2
+```
+
