@@ -1,0 +1,68 @@
+---
+title: "ordination"
+author: "Millie Chapman"
+date: "7/8/2019"
+output: html_document
+---
+
+```{r}
+library(vegan)
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+load("data/bryophytes.rda")
+
+occ <- as.data.frame(bryophytes$Y)
+traits <- as.data.frame(bryophytes$Tr)
+phylo <- as.data.frame(bryophytes$Phylo)
+```
+
+
+```{r}
+dist.bray<-vegdist(occ,binary="TRUE",method="bray")
+dist.jacc<-vegdist(occ,binary="TRUE",method="jaccard") 
+dist.euc<-vegdist(occ,binary="TRUE",method="euclidean") 
+```
+
+
+```{r}
+# First step is to calculate a distance matrix. 
+# Here we use Bray-Curtis distance metric
+dist <- vegdist(occ,  method = "bray")
+
+# PCoA is not included in vegan. 
+library(ape)
+PCOA <- pcoa(dist)
+
+# plot the eigenvalues and interpret
+barplot(PCOA$values$Relative_eig[1:10])
+# Can you also calculate the cumulative explained variance of the first 3 axes?
+
+# Some distance measures may result in negative eigenvalues--add a correction:
+PCOA <- pcoa(dist, correction = "cailliez")
+
+# Plot  results
+biplot.pcoa(PCOA)
+```
+
+
+
+## Euclidean
+  + Euclidean distance is a suitable multivariate measure of distance in situations where variables are expected to have equal variance. 
+  + analyses using this metric are appropriate if all taxa are measured on comparable scales with comparable variability. 
+  + On a mean–variance plot, the equal variance assumption corresponds to the assumption that the mean–variance relation is a horizontal line (slope zero).
+
+## Bray-Curtis
+  + standardisation used in the Bray–Curtis distance is only appropriate when between‐group differences in average absolute difference are matched by proportionate changes in average abundance. 
+  + applies to averages across all taxa rather than to each taxon separately, because the summation occurs inside the fraction rather than outside it. 
+  + Inside the fraction, there is no longer any consideration of the different variability of different taxa, as for the Euclidean and Manhattan distances. 
+  + Bray–Curtis will only weight different taxa appropriately if all variables have similar variability. 
+  + Bray-Curtis distance for abundance
+    + When the distance metric is Euclidean, PCoA is equivalent to Principal Components Analysis. 
+  
+ ## Jaccard
+  + Jaccard index for presence/absence data. 
+
+
