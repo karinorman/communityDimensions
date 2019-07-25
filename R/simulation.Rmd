@@ -1,0 +1,44 @@
+---
+title: "Simulation"
+author: "Kari Norman"
+date: "7/24/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(gstat)
+library(sp)
+```
+
+Set simulation parameters
+```{r}
+grid_size <- 100
+```
+
+Create gridded environmental variables 
+```{r}
+# unconditional gaussian simulation of environmental variables using gstat
+grid <- expand.grid(1:grid_size, 1:grid_size)
+colnames(grid) <- c("x", "y")
+ 
+# define the gstat object (spatial model)
+spat_mod <- gstat(formula=z~1, locations=~x+y, dummy=T, beta=1, model=vgm(psill=0.025,model="Exp",range=5), nmax=20, data = grid)
+ 
+# simulate four environmental variables
+sims <- predict(spat_mod, newdata=grid, nsim=4)
+ 
+# visualize
+gridded(sims) = ~x+y
+spplot(sims)
+
+#convert to data frame of cells and simulated variables
+enviro_data <- as.data.frame(sims)
+```
+
+Features to add
+* realistic environmental variable ranges
