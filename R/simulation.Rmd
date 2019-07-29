@@ -64,17 +64,19 @@ env_ranges <- map(env_data %>% select(-x, -y), ~range(.x))
 #dataframe of environmental decision rules
 species_env <- map_dfr(1:n_sp, 
                        ~map_dfr(env_ranges, ~ran_range(.x), .id = "env_var") %>% 
-                         mutate(species = letters[.x])
+                         mutate(species = paste0("spec", .x))
                        )
 
 ```
 
 Create Matrix species exclusion rules
 ```{r}
-
+#random assignment of cooccurrence 
+x <- sample.int(2, n_sp^2, TRUE) - 1
+dim(x) <- c(n_sp, n_sp)
 ```
 
-Populate matrix 
+Populate landscape
 ```{r}
 
 ```
