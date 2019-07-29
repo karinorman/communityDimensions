@@ -17,7 +17,14 @@ library(sp)
 
 Set simulation parameters
 ```{r}
+#n for the n x n landscape grid
 grid_size <- 100
+
+#number of species
+n_sp <- 5
+
+#number of environmental variables
+n_env <- 3
 ```
 
 Create gridded environmental variables 
@@ -29,15 +36,47 @@ colnames(grid) <- c("x", "y")
 # define the gstat object (spatial model)
 spat_mod <- gstat(formula=z~1, locations=~x+y, dummy=T, beta=1, model=vgm(psill=0.025,model="Exp",range=5), nmax=20, data = grid)
  
-# simulate four environmental variables
-sims <- predict(spat_mod, newdata=grid, nsim=4)
+# simulate three environmental variables
+sims <- predict(spat_mod, newdata=grid, nsim=n_env)
  
 # visualize
 gridded(sims) = ~x+y
 spplot(sims)
 
 #convert to data frame of cells and simulated variables
-enviro_data <- as.data.frame(sims)
+env_data <- as.data.frame(sims)
+```
+
+Create dataframe of environmental suitability for each species 
+```{r}
+#function for getting a random range within an existing range
+ran_range <- function(range){
+  lower <- runif(1, range[1], range[2])
+  upper <- runif(1, lower, range[2])
+  
+  return(data.frame(type = c("min", "max"), range = c(lower, upper)))
+}
+
+### get ranges for each species as two min and max columns ###
+#get ranges for environmental variables 
+env_ranges <- map(env_data %>% select(-x, -y), ~range(.x))
+
+#dataframe of environmental decision rules
+species_env <- map_dfr(1:n_sp, 
+                       ~map_dfr(env_ranges, ~ran_range(.x), .id = "env_var") %>% 
+                         mutate(species = letters[.x])
+                       )
+
+```
+
+Create Matrix species exclusion rules
+```{r}
+
+```
+
+Populate matrix 
+```{r}
+
 ```
 
 Features to add
