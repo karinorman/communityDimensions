@@ -69,17 +69,56 @@ species_env <- map_dfr(1:n_sp,
 
 ```
 
-Create Matrix species exclusion rules
+Create matrix species exclusion rules
 ```{r}
 #random assignment of cooccurrence 
 x <- sample.int(2, n_sp^2, TRUE) - 1
 dim(x) <- c(n_sp, n_sp)
 ```
 
-Populate landscape
+Identify potential species occupancy based on environmental requirements 
 ```{r}
+#cases <- map(unique(species_env$env_var), ~substitute())
+  
+get_spec_occ <- function(species_name, data = env_data){
+  data %>% mutate(!!species_name := case_when(sim1 > filter(species_env, species == species_name, env_var == "sim1", type == "min")$range &
+                                        sim1 < filter(species_env, species == species_name, env_var == "sim1", type == "max")$range &
+                                        sim2 > filter(species_env, species == species_name, env_var == "sim2", type == "min")$range &
+                                        sim2 < filter(species_env, species == species_name, env_var == "sim2", type == "max")$range &
+                                        sim3 > filter(species_env, species == species_name, env_var == "sim3", type == "min")$range &
+                                        sim3 < filter(species_env, species == species_name, env_var == "sim3", type == "max")$range ~ 1,
+                                      TRUE ~ 0)) %>%
+    select(species_name)
+}
 
+occ <- map_dfc(paste0("spec", 1:n_sp), get_spec_occ)
+
+
+```
+
+Programatically generate case example
+```{r}
+labels <- c("low", "mid", "high")
+breaks <- c(2, 4)
+
+cases <- lapply(seq_along(breaks), function(i) {
+  substitute(carb <= breaks[i] ~ labels[i], list(i = i))
+})
+cases <- append(cases, substitute(TRUE ~ labels[length(labels)]))
 ```
 
 Features to add
 * realistic environmental variable ranges
+
+
+
+
+
+
+
+
+
+
+
+
+
