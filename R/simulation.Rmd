@@ -79,6 +79,10 @@ Create matrix species exclusion rules
 co <- sample.int(2, n_sp^2, TRUE) - 1
 dim(co) <- c(n_sp, n_sp)
 
+#make symmetric
+ind <- lower.tri(co) 
+co[ind] <- t(co)[ind]
+
 #format matrix as dataframe with row and column names
 species_names <- paste0("spec", 1:n_sp)
 co <- as.data.frame(co)
@@ -86,7 +90,7 @@ colnames(co) <- species_names
 co <- bind_cols(co, species = species_names)
 ```
 
-Identify potential species occupancy based on environmental requirements 
+Identify potential species occupancy based on environmental requirements (environmental filtering)
 ```{r}
 get_spec_occ <- function(species_name, data = env_data, ranges = species_env){
   #use case_when to check if a cell's env value is in the species' range, assign occurence or absence accordingly
@@ -106,7 +110,7 @@ occ <- map_dfc(paste0("spec", 1:n_sp), get_spec_occ)
 
 ```
 
-Exclude species based on other species present
+Exclude species based on other species present (species filtering)
 ```{r}
 
 exclude_species <-
@@ -138,21 +142,20 @@ data <- map_dfc(paste0("spec", 1:n_sp), exclude_species) %>%
 
 Programatically generate case example
 ```{r}
-labels <- c("low", "mid", "high")
-breaks <- c(2, 4)
-
-cases <- lapply(seq_along(breaks), function(i) {
-  substitute(carb <= breaks[i] ~ labels[i], list(i = i))
-})
-cases <- append(cases, substitute(TRUE ~ labels[length(labels)]))
+# labels <- c("low", "mid", "high")
+# breaks <- c(2, 4)
+# 
+# cases <- lapply(seq_along(breaks), function(i) {
+#   substitute(carb <= breaks[i] ~ labels[i], list(i = i))
+# })
+# cases <- append(cases, substitute(TRUE ~ labels[length(labels)]))
 ```
 
 Features to add
 * realistic environmental variable ranges
 * programmatically generate environmental filtering `case_when`
-* symmetry of exclusion table
 * sparsity of exclusion table
-* randomize species exclusion 
+* randomize species exclusion algorithm
 
 
 
