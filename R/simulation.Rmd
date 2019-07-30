@@ -21,7 +21,7 @@ Set simulation parameters
 grid_size <- 100
 
 #number of species
-n_sp <- 5
+n_sp <- 50
 
 #number of environmental variables
 n_env <- 3
@@ -52,7 +52,11 @@ Create dataframe of environmental suitability for each species
 #function for getting a random range within an existing range
 ran_range <- function(range){
   lower <- runif(1, range[1], range[2])
-  upper <- runif(1, lower, range[2])
+  
+  if(lower + 5 > range[2]){
+    upper <- range[2]
+  } else{
+    upper <- runif(1, lower + 5, range[2])}
   
   return(data.frame(type = c("min", "max"), range = c(lower, upper)))
 }
@@ -64,7 +68,7 @@ env_ranges <- map(env_data %>% select(-x, -y), ~range(.x))
 #dataframe of environmental decision rules
 species_env <- map_dfr(1:n_sp, 
                        ~map_dfr(env_ranges, ~ran_range(.x), .id = "env_var") %>% 
-                         mutate(species = paste0("spec", .x, "_env"))
+                         mutate(species = paste0("spec", .x))
                        )
 
 ```
@@ -75,17 +79,17 @@ Create matrix species exclusion rules
 co <- sample.int(2, n_sp^2, TRUE) - 1
 dim(co) <- c(n_sp, n_sp)
 
+#format matrix as dataframe with row and column names
 species_names <- paste0("spec", 1:n_sp)
 co <- as.data.frame(co)
 colnames(co) <- species_names
-co <- cbind(co, species = species_names)
+co <- bind_cols(co, species = species_names)
 ```
 
 Identify potential species occupancy based on environmental requirements 
 ```{r}
-#cases <- map(unique(species_env$env_var), ~substitute())
-  
 get_spec_occ <- function(species_name, data = env_data, ranges = species_env){
+  #use case_when to check if a cell's env value is in the species' range, assign occurence or absence accordingly
   data %>% mutate(!!species_name := case_when(sim1 > filter(ranges, species == species_name, env_var == "sim1", type == "min")$range &
                                         sim1 < filter(ranges, species == species_name, env_var == "sim1", type == "max")$range &
                                         sim2 > filter(ranges, species == species_name, env_var == "sim2", type == "min")$range &
@@ -93,10 +97,11 @@ get_spec_occ <- function(species_name, data = env_data, ranges = species_env){
                                         sim3 > filter(ranges, species == species_name, env_var == "sim3", type == "min")$range &
                                         sim3 < filter(ranges, species == species_name, env_var == "sim3", type == "max")$range ~ 1,
                                       TRUE ~ 0)) %>%
-    select(species_name)
+    select(species_name) #return just the occurence column 
 }
 
-occ <- map_dfc(paste0("spec", 1:n_sp, "_env"), get_spec_occ)
+#map accross species to get an occurence column for each
+occ <- map_dfc(paste0("spec", 1:n_sp), get_spec_occ)
 
 
 ```
@@ -108,19 +113,18 @@ exclude_species <-
   function(species_name,
            exclusion_mat = co,
            occ_mat = occ) {
+    
+    #get list of species that can exclude specified species
     ex_species <- exclusion_mat %>%
       select(species, species_name) %>%
       filter(!!sym(species_name) == 1) %>%
       pull(species)
       
-      
+      #if there are exclusion species, remove occurence in cells where they already occur
       if (length(ex_species) > 0) {
-        ex_species <- paste0(ex_species, "_env")
-        
-        occ %>% mutate(!!species_name := case_when(sum(!!!syms(ex_species)) >= 1 ~ 0, #if at least one species that can exclude occurs assign as not present
-                                                   TRUE ~ !!sym(paste0(
-                                                     species_name, "_env"
-                                                   )))) %>% #otherwise accept existing value
+        #if at least one species that can exclude occurs, assign as not present
+        occ_mat %>% mutate(!!species_name := case_when(sum(!!!syms(ex_species)) >= 1 ~ 0, 
+                                                   TRUE ~ !!sym(species_name))) %>% #otherwise accept existing value
           select(species_name)
       } else{
         return(select(occ, !!sym(species_name)))
@@ -146,7 +150,9 @@ cases <- append(cases, substitute(TRUE ~ labels[length(labels)]))
 Features to add
 * realistic environmental variable ranges
 * programmatically generate environmental filtering `case_when`
-* species co-occurence filter 
+* symmetry of exclusion table
+* sparsity of exclusion table
+* randomize species exclusion 
 
 
 
