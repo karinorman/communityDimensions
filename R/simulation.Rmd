@@ -53,10 +53,10 @@ Create dataframe of environmental suitability for each species
 ran_range <- function(range){
   lower <- runif(1, range[1], range[2])
   
-  if(lower + 5 > range[2]){
+  if(lower + .5 > range[2]){
     upper <- range[2]
   } else{
-    upper <- runif(1, lower + 5, range[2])}
+    upper <- runif(1, lower + .5, range[2])}
   
   return(data.frame(type = c("min", "max"), range = c(lower, upper)))
 }
