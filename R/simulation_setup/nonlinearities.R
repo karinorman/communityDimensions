@@ -36,30 +36,33 @@ numSpecies <- 30
 
 # mat: expects covariance matrix
 # no fixed effects
-simData <- function(mat, numSites, numSpecies) {
-
+simData <- function(mat, signal, numSites, numSpecies) {
+  X <- matrix(rnorm(numSites), numSites, 1) ## value for every site
+  
+  X.coef <- signal
+  X.shift <- matrix(rnorm(numSites), numSites, 1) ## each species gets a shift from same effect, this will introduce nonlinearity in the covariance between species
+  eta <- tcrossprod(as.matrix(X), X.coef)
+  
   
   sim_y <- matrix(NA, nrow = numSites, ncol = numSpecies)
   for (i in 1:numSites) {
-    samples <- mvrnorm(1, rep(0,numSpecies), mat) ## expects covariance matrix
+    samples <- mvrnorm(1, eta[i]+X.shift, mat) ## expects covariance matrix
     sim_y[i,] <- rbinom(numSites, size = 1, prob = pnorm(samples))
   }
   
   return(sim_y)
 }
 
-test1 <- simData(testMat,  numSites, numSpecies)
+signal = 1
+
+test1 <- simData(testMat,  signal, numSites, numSpecies)
 test1
 
 
-## keep numSites and strength fixed
+## thing that introduces more/less nonlinearity: how signal to shift magnitude differs
 
-numSpecies <- c(5, 10, 15, 20, 25, 30)
-numFactors <- c(1, 2, 5, 10, 20)
+## use good species to site ratio from correctly specified
 
-## then do a more realistic example
-
-numSpecies = 50
-numSites = 200
+signal = c(0.1, 0.5, 1, 2, 5)
 numFactors <- c(1, 2, 5, 10, 20)
 
