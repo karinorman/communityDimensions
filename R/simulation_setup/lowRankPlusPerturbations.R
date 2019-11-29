@@ -53,11 +53,11 @@ helperCreateMatrixNice <- function(sparsity, signal, d) {
 }
 
 ## generate simulated given latent factor covariance and the perturbation matrix
-simData <- function(mat, addM, numSpecies, numSites){
+simData <- function(mat, addM, mixture, numSpecies, numSites){
   #browser()
   sim_y=matrix(NA,nrow=numSites, ncol=numSpecies)
   for(i in 1:numSites){
-    samples = mvrnorm(1,rep(0,numSpecies),mat+solve(as.matrix(addM))) 
+    samples = mvrnorm(1,rep(0,numSpecies),mixture*mat+(1-mixture)*solve(as.matrix(addM))) 
     sim_y[i,] <- rbinom(numSites, size = 1, prob = pnorm(samples)) 
   }
   
@@ -74,7 +74,9 @@ signal = 1
 numFactors = c(1, 2, 3, 5, 10, 20)
 sparsity <- c(0.9, 0.5, 0.2)
 
+mixture <- seq(0, 1, by=.1) ## interpolate between latent factor matrix and perturbation matrix
+
 lfM <- getMat(numFactors[1],strength)
 perturbM <- helperCreateMatrixNice(sparsity[1],signal, numSpecies)
 
-test = simData(lfM, perturbM, numSpecies, numSites)
+test = simData(lfM, perturbM, mixture[5], numSpecies, numSites)
