@@ -1,4 +1,5 @@
 
+#### kl divergence ####
 klDivergence <- function(cov1, cov2){
   ## natural log
   wantT <- solve(cov2) %*% cov1
@@ -38,3 +39,20 @@ test3[1,1]=3
 klDivergence(test, test)
 klDivergence(test, test2)
 klDivergence(test, test3)
+
+
+#### frobenius norm ####
+
+## probably not technically the frobenius norm, but inspired by it
+
+frobeniusNorm <- function(estimatedMat, truthMat){
+  sqrt(sum(abs(truthMat - estimatedMat)))
+}
+
+frobeniusNorm(matrix(rnorm(25), 5, 5),  matrix(rnorm(25), 5, 5))
+
+test = matrix(rnorm(25), 5, 5)
+test2 = test
+test2[1,1]=-100
+frobeniusNorm(test, test)
+frobeniusNorm(test, test2)
