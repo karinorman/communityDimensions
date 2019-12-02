@@ -7,16 +7,16 @@ library(dplyr)
 
 ## generates matrices with certain number of latent factors
 ## strength represents how large the covariances can be (larger means stronger relationships)
-getMat <- function(numFactors, strength) {
+getMat <- function(numFactors, numSpecies, strength) {
   vectors <- lapply(1:numFactors, function(x, y) {
-    runif(30, 0, y)
+    runif(numSpecies, 0, y)
   }, strength)
   
   cov <- lapply(vectors, function(x) {
     x %*% t(x)
   })
   
-  A <- matrix(0, nrow = 30, ncol = 30)
+  A <- matrix(0, nrow = numSpecies, ncol = numSpecies)
   
   for (i in 1:numFactors) {
     A <- A + cov[[i]]
@@ -58,7 +58,7 @@ simData <- function(mat, addM, mixture, numSpecies, numSites){
   sim_y=matrix(NA,nrow=numSites, ncol=numSpecies)
   for(i in 1:numSites){
     samples = mvrnorm(1,rep(0,numSpecies),mixture*mat+(1-mixture)*solve(as.matrix(addM))) 
-    sim_y[i,] <- rbinom(numSites, size = 1, prob = pnorm(samples)) 
+    sim_y[i,] <- rbinom(numSpecies, size = 1, prob = pnorm(samples)) 
   }
   
   return(sim_y)
