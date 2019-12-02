@@ -24,8 +24,8 @@ getMat <- function(numFactors, numSpecies, strength) {
   return(A)
 }
 
-sparsity <- c(0.9, 0.5, 0.2)
-signal <- 1
+#sparsity <- c(0.9, 0.5, 0.2)
+#signal <- 1
 
 ## sparsity: between 0 and 1 (not inclusive)
 ##           higher number means more sparse
@@ -66,17 +66,28 @@ simData <- function(mat, addM, mixture, numSpecies, numSites){
 }
 
 ## change to the ratio that does best in correctly specified case
-numSpecies = 30
-numSites = 30
+
+## 100 sites, 15 species
+
+numSpecies = 15
+numSites = 100
 
 strength = 1 
 signal = 1
-numFactors = c(1, 2, 3, 5, 10, 20)
+numFactors = c(1, 2, 3, 5, 10)
 sparsity <- c(0.9, 0.5, 0.2)
 
-mixture <- seq(0, 1, by=.1) ## interpolate between latent factor matrix and perturbation matrix
 
-lfM <- getMat(numFactors[1],strength)
-perturbM <- helperCreateMatrixNice(sparsity[1],signal, numSpecies)
+mixture <- seq(0, 1, by=.2) ## interpolate between latent factor matrix and perturbation matrix
 
-test = simData(lfM, perturbM, mixture[5], numSpecies, numSites)
+scenarios = expand.grid(numFactors, sparsity, mixture)
+
+lfM <- lapply( scenarios[,1], getMat, numSpecies, strength)
+
+perturbM <- lapply(scenarios[,2], helperCreateMatrixNice,signal, numSpecies)
+
+simulatedData <- lapply(1:nrow(scenarios), function(x){simData(lfM[[x]], perturbM[[x]], scenarios[x,3],numSpecies, numSites)})
+
+save(lfM, file="test_data/testLFMats_lowRankPlus.RData")
+save(perturbM, file="test_data/testPerturbMats_lowRankPlus.RData")
+save(simulatedData, file="test_data/testData_lowRankPlus.RData")

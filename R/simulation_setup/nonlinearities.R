@@ -64,6 +64,8 @@ test1
 
 ## use good species to site ratio from correctly specified
 
+## 100 sites, 15 species
+
 signal = c(0.1, 0.5, 1, 2, 5)
 numFactors <- c(1, 2, 5, 10, 20)
 
