@@ -4,16 +4,16 @@ library(MASS)
 
 ## generates matrices with certain number of latent factors
 ## strength represents how large the covariances can be (larger means stronger relationships)
-getMat <- function(numFactors, strength) {
+getMat <- function(numFactors, numSpecies, strength) {
   vectors <- lapply(1:numFactors, function(x, y) {
-    runif(30, 0, y)
+    runif(numSpecies, 0, y)
   }, strength)
   
   cov <- lapply(vectors, function(x) {
     x %*% t(x)
   })
   
-  A <- matrix(0, nrow = 30, ncol = 30)
+  A <- matrix(0, nrow = numSpecies, ncol = numSpecies)
   
   for (i in 1:numFactors) {
     A <- A + cov[[i]]
@@ -25,8 +25,9 @@ set.seed(13211)
 
 numFactors <- 2
 strength <- 1
+numSpecies <- 30
 
-testMat <- getMat(numFactors, strength)
+testMat <- getMat(numFactors, numSpecies, strength)
 
 
 #### given a matrix, simulate occurrence data ####
@@ -36,19 +37,19 @@ numSpecies <- 30
 
 # mat: expects covariance matrix
 # no fixed effects
-simData <- function(mat, numSites, numSpecies) {
-
+simData <- function(mat, numSpecies,  numSites) {
+#browser()
   
   sim_y <- matrix(NA, nrow = numSites, ncol = numSpecies)
   for (i in 1:numSites) {
     samples <- mvrnorm(1, rep(0,numSpecies), mat) ## expects covariance matrix
-    sim_y[i,] <- rbinom(numSites, size = 1, prob = pnorm(samples))
+    sim_y[i,] <- rbinom(numSpecies, size = 1, prob = pnorm(samples))
   }
   
   return(sim_y)
 }
 
-test1 <- simData(testMat,  numSites, numSpecies)
+test1 <- simData(testMat,  numSpecies, numSites)
 test1
 
 
@@ -56,6 +57,14 @@ test1
 
 numSpecies <- c(5, 10, 15, 20, 25, 30)
 numFactors <- c(1, 2, 5, 10, 20)
+
+scenarios = expand.grid(numSpecies, numFactors)
+
+trueMats = mapply(getMat, scenarios[,2], scenarios[,1], strength, SIMPLIFY = F)
+
+simulatedData = mapply(simData, trueMats, scenarios[,1], numSites, SIMPLIFY = F)
+
+save(simulatedData, file = "test_data/testMats_correctlySpecified.RData")
 
 ## then do a more realistic example
 
