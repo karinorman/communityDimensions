@@ -64,7 +64,9 @@ trueMats = mapply(getMat, scenarios[,2], scenarios[,1], strength, SIMPLIFY = F)
 
 simulatedData = mapply(simData, trueMats, scenarios[,1], numSites, SIMPLIFY = F)
 
-save(simulatedData, file = "test_data/testMats_correctlySpecified.RData")
+save(trueMats, file = "test_data/testMats_correctlySpecified.RData")
+
+save(simulatedData, file = "test_data/testData_correctlySpecified.RData")
 
 ## then do a more realistic example
 
