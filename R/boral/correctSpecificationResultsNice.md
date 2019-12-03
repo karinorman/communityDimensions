@@ -5,54 +5,11 @@ Sara Stoudt
 
 ``` r
 require(ggplot2)
-```
-
-    ## Loading required package: ggplot2
-
-    ## Warning: package 'ggplot2' was built under R version 3.5.2
-
-``` r
 require(dplyr)
-```
-
-    ## Loading required package: dplyr
-
-    ## Warning: package 'dplyr' was built under R version 3.5.2
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 require(tidyr)
-```
-
-    ## Loading required package: tidyr
-
-``` r
 require(parallel)
-```
-
-    ## Loading required package: parallel
-
-``` r
 require(boral)
 ```
-
-    ## Loading required package: boral
-
-    ## Loading required package: coda
-
-    ## Warning: package 'coda' was built under R version 3.5.2
-
-    ## If you recently updated boral, please check news(package = "boral") for the updates in the latest version
 
 ``` r
 setwd("~/Desktop/communityDimensions/R/simulation_setup/test_data")
@@ -603,3 +560,97 @@ ggplot(scenarios, aes(numSpecies, pval ))+geom_point(cex=2)+geom_line()+facet_wr
 ```
 
 ![](correctSpecificationResultsNice_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+
+``` r
+kl <- c()
+frob <- c()
+setwd("~/Desktop/communityDimensions/R/simulation_setup/test_data")
+
+for(i in 1:18){
+  
+
+load(file=paste0("correctlySpecifiedResults/r",i,".RData"))
+
+
+estimatedMat = fit.boral$lv.coefs.mean[,-1]%*%t(fit.boral$lv.coefs.mean[,-1])
+
+## put lambda lambda together
+
+
+## kl divergence
+
+kl <- c(kl,klDivergence(trueMats[[i]]+diag(nrow(trueMats[[i]])), estimatedMat+diag(nrow(trueMats[[i]]))))
+
+## frobenius
+
+frob <- c(frob,frobeniusNorm(estimatedMat, trueMats[[i]]))
+
+}
+numSpecies <- c(5, 10, 15, 20, 25, 30)
+numFactors <- c(1, 2, 5, 10, 20)
+
+scenarios = expand.grid(numSpecies = numSpecies, numFactors = numFactors)
+
+results = cbind.data.frame(scenarios[1:18,], kl, frob, pval=unlist(test)[1:18])
+```
+
+``` r
+ggplot(results, aes(kl,pval))+geom_point()+geom_line()+facet_wrap(~numFactors,scales = "free_y")
+```
+
+![](correctSpecificationResultsNice_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+
+``` r
+ggplot(results, aes(frob,pval))+geom_point()+geom_line()+facet_wrap(~numFactors,scales = "free_y")
+```
+
+![](correctSpecificationResultsNice_files/figure-gfm/unnamed-chunk-42-2.png)<!-- -->
+
+``` r
+### misspecified ####
+setwd("~/Desktop/communityDimensions/R/simulation_setup/test_data")
+
+kl <- c()
+frob <- c()
+for(i in 19:nrow(scenarios)){
+  
+  
+  load(file=paste0("correctlySpecifiedResults/r",i,".RData"))
+  
+  
+  estimatedMat = fit.boral$lv.coefs.mean[,-1]%*%t(fit.boral$lv.coefs.mean[,-1])
+  
+  ## put lambda lambda together
+  
+  
+  ## kl divergence
+  
+  kl <- c(kl,klDivergence(trueMats[[i]]+diag(nrow(trueMats[[i]])), estimatedMat+diag(nrow(trueMats[[i]]))))
+  
+  ## frobenius
+  
+  frob <- c(frob,frobeniusNorm(estimatedMat, trueMats[[i]]))
+  
+}
+
+numSpecies <- c(5, 10, 15, 20, 25, 30)
+numFactors <- c(1, 2, 5, 10, 20)
+
+scenarios = expand.grid(numSpecies = numSpecies, numFactors = numFactors)
+
+
+results2 = cbind.data.frame(scenarios[19:nrow(scenarios),], kl, frob, pval=unlist(test)[19:length(test)])
+names(results2)[1:2]= c("numSpecies", "numFactors")
+```
+
+``` r
+ggplot(results2, aes(kl,pval))+geom_point()+geom_line()+facet_wrap(~numFactors,scales = "free_y")
+```
+
+![](correctSpecificationResultsNice_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+
+``` r
+ggplot(results2, aes(frob,pval))+geom_point()+geom_line()+facet_wrap(~numFactors,scales = "free_y")
+```
+
+![](correctSpecificationResultsNice_files/figure-gfm/unnamed-chunk-44-2.png)<!-- -->
