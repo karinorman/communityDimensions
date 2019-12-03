@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 require(ggplot2)
+require(dplyr)
 require(tidyr)
 require(parallel)
 require(boral)
@@ -420,5 +421,113 @@ makeJaccardECDF(fit.boral, paste("species: ", scenarios[29,1]," numFactors: ", s
 setwd("~/Desktop/communityDimensions/R/simulation_setup/test_data/correctlySpecifiedResults")
 load("r30.RData")
 makeJaccardECDF(fit.boral, paste("species: ", scenarios[30,1]," numFactors: ", scenarios[30,2]))
+
+```
+
+
+```{r}
+#https://github.com/cran/jaccard/blob/master/R/jaccard.R
+jaccard <- function(x, y, center=FALSE, px=NULL, py=NULL) {
+  if(length(x) != length(y)) {
+    stop("Two fingerprints (x and y) must be of the same length.")
+  }
+  
+  if(is.null(px) | is.null(py)){
+    px <- mean(x)
+    py <- mean(y)
+  }
+  
+  sumxy <- sum(x & y)
+  unionxy <- sum(x)+sum(y)-sumxy
+  if(unionxy == 0) {
+    j <- (px*py)/(px+py-px*py)
+  } else {
+    j <- sumxy/unionxy
+  }
+  if(center == FALSE) {
+    return(j)
+  } else {
+    return(j - (px*py)/(px+py-px*py))
+  }
+}
+
+
+process_jaccardSpecies <- function(fileName, numSpecies){
+  #browser()
+  load(file=fileName)
+  
+  truth1 <- fit.boral$yP[nrow(fit.boral$yP), ]
+  parsetemp <- unlist(lapply(strsplit(colnames(fit.boral$yStarP), "\\["), function(x) {
+    x[2]
+  }))
+  
+  siteNum1 <- unlist(lapply(strsplit(parsetemp, ","), function(x) {
+    x[1]
+  }))
+  speciesNum <- unlist(lapply(strsplit(parsetemp, ","), function(x) {
+    x[2]
+  }))
+  speciesNum1 <- sub("\\]", "", speciesNum)
+  
+  test <- cbind.data.frame(t(fit.boral$yStarP), speciesNum=speciesNum1, siteNum=siteNum1, truth=truth1)
+  
+  test2 <- gather(test, -speciesNum, -siteNum, -truth, key = "iteration", value = "val")
+  
+  trueDist <- subset(test2, iteration == 1)
+  trueDist$speciesNum <- as.numeric(as.character(trueDist$speciesNum))
+  
+  truthNF=matrix(truth1, nrow=numSpecies, ncol=numSpecies, byrow=F)
+  
+  pairs <- t(combn(1:numSpecies, 2))
+  
+  obsJ=mapply(function(x,y){jaccard(truthNF[,x], truthNF[,y])},pairs[,1], pairs[,2],SIMPLIFY = F)
+
+  test2$speciesNum=as.numeric(as.character(test2$speciesNum))
+  test2$siteNum=as.numeric(as.character(test2$siteNum))
+  
+
+  toStore = vector("list", 100)
+  idx=1
+  for(i in 900:1000){
+    
+    toUse = subset(test2, iteration==i)
+    
+    ppcNF <- matrix(nrow=length(unique(test2$siteNum)), ncol=length(unique(test2$speciesNum)))
+    ppcNF[cbind(toUse$siteNum, toUse$speciesNum)] <- toUse$val
+    
+    ppcJ=mapply(function(x,y){jaccard(ppcNF[,x], ppcNF[,y])},pairs[,1], pairs[,2],SIMPLIFY = F) ## want to do this for everything in test2 then collapse
+    
+    toStore[[idx]] = unlist(ppcJ)
+    idx=idx+1
+  }
+  
+ ## take average afterwards not before
+  
+  ksT = ks.test(unlist(obsJ),  apply(do.call("rbind", toStore),2,mean))
+  
+  return(ksT$p.value)
+}
+```
+
+```{r, cache=T, warning=F, message = F}
+numSpecies <- c(5, 10, 15, 20, 25, 30)
+numFactors <- c(1, 2, 5, 10, 20)
+
+scenarios = expand.grid(numSpecies = numSpecies, numFactors = numFactors)
+
+setwd("~/Desktop/communityDimensions/R/simulation_setup/test_data/correctlySpecifiedResults")
+
+test = mapply(process_jaccardSpecies,list.files()[order(nchar(list.files()))], scenarios$numSpecies,SIMPLIFY = F)
+
+scenarios$pval=unlist(test)
+
+```
+
+
+
+```{r}
+ggplot(scenarios, aes(numSpecies, pval ))+geom_point(cex=2)+geom_line()+facet_wrap(~numFactors, scales = "free_y")+theme_minimal()+ylab("p(ish)-value")
+
+
 
 ```
