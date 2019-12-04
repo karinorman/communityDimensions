@@ -56,6 +56,10 @@ helperCreateMatrixNice <- function(sparsity, signal, d) {
 simData <- function(mat, addM, mixture, numSpecies, numSites){
   #browser()
   sim_y=matrix(NA,nrow=numSites, ncol=numSpecies)
+  matCorr = cov2cor(mat)
+  addMCorr = cov2cor(addM)
+  ## need to do on correlation scale so that smooth mixture between
+  
   for(i in 1:numSites){
     samples = mvrnorm(1,rep(0,numSpecies),mixture*mat+(1-mixture)*solve(as.matrix(addM))) 
     sim_y[i,] <- rbinom(numSpecies, size = 1, prob = pnorm(samples)) 
@@ -81,6 +85,7 @@ sparsity <- c(0.9, 0.5, 0.2)
 mixture <- seq(0, 1, by=.2) ## interpolate between latent factor matrix and perturbation matrix
 
 scenarios = expand.grid(numFactors, sparsity, mixture)
+
 
 lfM <- lapply( scenarios[,1], getMat, numSpecies, strength)
 
