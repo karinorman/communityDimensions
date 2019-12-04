@@ -49,6 +49,7 @@ estimatedMat = fit.boral$lv.coefs.mean[,-1]%*%t(fit.boral$lv.coefs.mean[,-1])
 
 ## kl divergence
 
+## adding this diagonal is not good, still have to figure out the invertibility thing
 kl <- c(kl,klDivergence(trueMats[[i]]+diag(nrow(trueMats[[i]])), estimatedMat+diag(nrow(trueMats[[i]]))))
 
 ## frobenius

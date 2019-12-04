@@ -9,7 +9,7 @@ library(dplyr)
 ## strength represents how large the covariances can be (larger means stronger relationships)
 getMat <- function(numFactors, numSpecies, strength) {
   vectors <- lapply(1:numFactors, function(x, y) {
-    runif(numSpecies, 0, y) ## change this to -1, y moving forward, could go to rnorm() too
+    runif(numSpecies, -1, y) ## could go to rnorm() too
   }, strength)
   
   cov <- lapply(vectors, function(x) {
@@ -53,9 +53,15 @@ helperCreateMatrixNice <- function(sparsity, signal, d) {
 }
 
 ## generate simulated given latent factor covariance and the perturbation matrix
+
+## WARNING - hasn't been checked to make sure an increase in signal induces more misspecification, cov2cor should work, but I haven't tested it yet on my case
 simData <- function(mat, addM, mixture, numSpecies, numSites){
   #browser()
   sim_y=matrix(NA,nrow=numSites, ncol=numSpecies)
+  matCorr = cov2cor(mat)
+  addMCorr = cov2cor(addM)
+  ## need to do on correlation scale so that smooth mixture between
+  
   for(i in 1:numSites){
     samples = mvrnorm(1,rep(0,numSpecies),mixture*mat+(1-mixture)*solve(as.matrix(addM))) 
     sim_y[i,] <- rbinom(numSpecies, size = 1, prob = pnorm(samples)) 
@@ -81,6 +87,7 @@ sparsity <- c(0.9, 0.5, 0.2)
 mixture <- seq(0, 1, by=.2) ## interpolate between latent factor matrix and perturbation matrix
 
 scenarios = expand.grid(numFactors, sparsity, mixture)
+
 
 lfM <- lapply( scenarios[,1], getMat, numSpecies, strength)
 

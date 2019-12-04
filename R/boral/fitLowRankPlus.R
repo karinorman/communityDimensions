@@ -18,7 +18,7 @@ scenarios = expand.grid(numFactors, sparsity, mixture)
 
 require(boral)
 
-for(i in 1:length(scenarios)){ ## 5 latent factors
+for(i in 1:nrow(scenarios)){ ## 5 latent factors
   ## use correct number of latent variables
   
   if(scenarios[i,1]>5){

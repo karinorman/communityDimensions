@@ -115,6 +115,7 @@ goodRatio = subset(scenarios, numSpecies==5)
 
 
 ```{r}
+## adding diagonal is not good, still have to figure out invertibility stuff
 klDivergence(svdApprox(trueMats[[7]],1)+diag(nrow(trueMats[[7]])), trueMats[[7]]+diag(nrow(trueMats[[7]])))
 
 frobeniusNorm(svdApprox(trueMats[[7]],1)+diag(nrow(trueMats[[7]])), trueMats[[7]]+diag(nrow(trueMats[[7]])))
