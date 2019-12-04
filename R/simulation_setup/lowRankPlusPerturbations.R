@@ -53,6 +53,8 @@ helperCreateMatrixNice <- function(sparsity, signal, d) {
 }
 
 ## generate simulated given latent factor covariance and the perturbation matrix
+
+## WARNING - hasn't been checked to make sure an increase in signal induces more misspecification, cov2cor should work, but I haven't tested it yet on my case
 simData <- function(mat, addM, mixture, numSpecies, numSites){
   #browser()
   sim_y=matrix(NA,nrow=numSites, ncol=numSpecies)

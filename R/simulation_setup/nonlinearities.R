@@ -37,6 +37,8 @@ numSpecies <- 30
 
 # mat: expects covariance matrix
 # no fixed effects
+
+## WARNING - hasn't been checked to make sure an increase in signal induces more misspecification
 simData <- function(mat, signal,  numSpecies, numSites) {
   X <- matrix(rnorm(numSites), numSites, 1) ## value for every site
   
