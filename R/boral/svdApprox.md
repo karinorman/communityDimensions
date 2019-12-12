@@ -25,8 +25,8 @@ svdApprox <- function(mat, numFactors){
 
 ``` r
 setwd("/Users/Sara/Desktop/communityDimensions/R/simulation_setup")
-load(file="test_data/testLFMats_lowRankPlus.RData")
-load(file="test_data/testPerturbMats_lowRankPlus.RData")
+load(file="simulation_study_data/matrices/lfPart_lowRankPlus.RData")
+load(file="simulation_study_data/matrices/perturbPart_lowRankPlus.RData")
 
 
 numSpecies = 15
@@ -136,6 +136,7 @@ goodRatio = subset(scenarios, numSpecies==5)
 ```
 
 ``` r
+## adding diagonal is not good, still have to figure out invertibility stuff
 klDivergence(svdApprox(trueMats[[7]],1)+diag(nrow(trueMats[[7]])), trueMats[[7]]+diag(nrow(trueMats[[7]])))
 ```
 

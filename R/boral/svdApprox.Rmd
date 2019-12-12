@@ -24,8 +24,8 @@ svdApprox <- function(mat, numFactors){
 
 ```{r}
 setwd("/Users/Sara/Desktop/communityDimensions/R/simulation_setup")
-load(file="test_data/testLFMats_lowRankPlus.RData")
-load(file="test_data/testPerturbMats_lowRankPlus.RData")
+load(file="simulation_study_data/matrices/lfPart_lowRankPlus.RData")
+load(file="simulation_study_data/matrices/perturbPart_lowRankPlus.RData")
 
 
 numSpecies = 15
