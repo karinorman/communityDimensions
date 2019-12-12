@@ -22,7 +22,7 @@
 \begin{itemize}
 \item Is dimension reduction a realistic approach for joint species distribution modeling?
 \item Does the technique of dimension reduction matter?
-\item Can we quantify how much we sacrifice in terms of some metric if the true ecology cannot be represented well by a small number of dimensions?
+\item Can we quantify how much we sacrifice in terms of some metric if the true ecology cannot be represented well by a small number of dimensions? (TO DO: define metrics!)
 
 \end{itemize}
 
@@ -42,6 +42,42 @@
 
 \end{itemize}
 
+\section{boral model formulation}
+
+\noindent To get some insight into the latent factor approach:
+
+\noindent site $i$ \\
+species $j$  \\ 
+latent factor $k$ \\
+%observable covariates $m$\\
+
+
+\noindent $\Phi$: CDF of standard normal
+
+\noindent observed data: $Y_{ij}$ true occurrence, assuming perfect detection 
+
+\noindent parameters: $\lambda_{jk}$
+
+\noindent random effects: $\eta_{ik}$
+
+\begin{align*}
+Y_{ij} &\sim Bern(\Phi(v_{ij})) \\
+%\mu_{ij}&=X_{i.}\beta_{.j}\\
+v_{ij} &= \eta_{i.} \lambda_{j.}' \\ 
+\eta_{i.} &\sim MVN(0, I_K)\\
+\lambda_{jk} &\sim N(0,10)\\
+%\beta_{m,j} &\sim N(0,10)\\
+\end{align*}
+
+
+%*with some constraints to ensure $\Lambda'\Lambda$ invertible
+
+\noindent Think of $\lambda_{kj}$ as species-specific coefficients for unobserved covariates $\eta_{i.}$ at the site level. They introduce correlation between species: $v_{i.} \sim MVN(0,  \Lambda \Lambda')$. 
+
+Note: ignoring fixed effects of observable covariates for now
+
+
+\vspace{.2in}
 
 Note: the following simulation scenarios are designed to test boral and HMSC, they may not be fair to ordination and PERMANOVA
 
@@ -68,11 +104,11 @@ I think this will all come down to the nuances between PCA (related to ordinatio
 \subsection{Latent Factors + Extra}
 
 \begin{itemize}
-\item $\Lambda' \Lambda$: low rank matrix
+\item $\Lambda \Lambda'$: low rank matrix
 
 \item $\Sigma$: arbitrary precision matrix (could be sparse, medium, or dense), need to check that the rank of the inverse is large
 
-\item Perry proposed a linear combination: $a\Lambda' \Lambda + (1-a)\Sigma^{-1}$. If $a$ is small, this is more mis-specified. A denser $\Sigma$ is more mis-specified. 
+\item Perry proposed a linear combination: $a\Lambda \Lambda' + (1-a)\Sigma^{-1}$. If $a$ is small, this is more mis-specified. A denser $\Sigma$ is more mis-specified. 
 
 \end{itemize}
 
@@ -85,7 +121,7 @@ I think this will all come down to the nuances between PCA (related to ordinatio
 \end{itemize}
 
 \begin{figure}[H]
-\includegraphics[width=.4\textwidth]{IMG_5092}
+\includegraphics[width=.35\textwidth]{IMG_5092}
 \end{figure}
 
 
