@@ -32,18 +32,19 @@ testMat <- getMat(numFactors, numSpecies, strength)
 
 #### given a matrix, simulate occurrence data ####
 
-numSites <- 30
-numSpecies <- 30
+numSites <- 100
+numSpecies <- 15
 
 # mat: expects covariance matrix
 # no fixed effects
 
 ## WARNING - hasn't been checked to make sure an increase in signal induces more misspecification
 simData <- function(mat, signal,  numSpecies, numSites) {
+  #browser()
   X <- matrix(rnorm(numSites), numSites, 1) ## value for every site
   
   X.coef <- signal
-  X.shift <- matrix(rnorm(numSites), numSites, 1) ## each species gets a shift from same effect, this will introduce nonlinearity in the covariance between species
+  X.shift <- matrix(rnorm(numSpecies), numSpecies, 1) ## each species gets a shift from same effect, this will introduce nonlinearity in the covariance between species
   eta <- tcrossprod(as.matrix(X), X.coef)
   
   
@@ -69,7 +70,7 @@ test1 <- simData(testMat,  signal, numSpecies, numSites)
 ## 100 sites, 15 species
 
 signal = c(0.1, 0.5, 1, 2, 5)
-numFactors <- c(1, 2, 5, 10, 20)
+numFactors <- c(1, 2, 5, 10, 15)
 
 scenarios = expand.grid(numFactors = numFactors, signal=signal) ## 25
 

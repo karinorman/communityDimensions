@@ -54,12 +54,13 @@ test1
 
 
 ## keep numSites and strength fixed
+numSites <- 40
 
-numSpecies <- c(5, 10, 15, 20, 25, 30)
-numFactors <- c(1, 2, 5, 10, 20)
+numSpecies <- c( 10, 15, 20, 25, 30, 35)
+numFactors <- c(1, 2, 5, 10)
 
-## num sites = 30
-scenarios = expand.grid(numSpecies=numSpecies, numFactors=numFactors) ## 30
+## num sites = 40
+scenarios = expand.grid(numSpecies=numSpecies, numFactors=numFactors) ## 24
 
 setwd("~/Desktop/communityDimensions")
 write.csv(scenarios,"R/simulation_setup/simulation_study_data/correctSpecificationScenarios.csv",row.names=F)
