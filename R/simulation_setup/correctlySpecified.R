@@ -58,15 +58,19 @@ test1
 numSpecies <- c(5, 10, 15, 20, 25, 30)
 numFactors <- c(1, 2, 5, 10, 20)
 
-scenarios = expand.grid(numSpecies, numFactors)
+## num sites = 30
+scenarios = expand.grid(numSpecies=numSpecies, numFactors=numFactors) ## 30
+
+setwd("~/Desktop/communityDimensions")
+write.csv(scenarios,"R/simulation_setup/simulation_study_data/correctSpecificationScenarios.csv",row.names=F)
 
 trueMats = mapply(getMat, scenarios[,2], scenarios[,1], strength, SIMPLIFY = F)
 
 simulatedData = mapply(simData, trueMats, scenarios[,1], numSites, SIMPLIFY = F)
 
-save(trueMats, file = "test_data/testMats_correctlySpecified.RData")
+save(trueMats, file = "R/simulation_setup/simulation_study_data/matrices/testMats_correctlySpecified.RData")
 
-save(simulatedData, file = "test_data/testData_correctlySpecified.RData")
+save(simulatedData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_correctlySpecified.RData")
 
 ## then do a more realistic example
 
@@ -74,3 +78,13 @@ numSpecies = 50
 numSites = 200
 numFactors <- c(1, 2, 5, 10, 20)
 
+scenarios = expand.grid(numSpecies=numSpecies, numFactors=numFactors) ## 5
+write.csv(scenarios,"R/simulation_setup/simulation_study_data/correctSpecificationScenariosRealistic.csv",row.names=F)
+
+trueMats = mapply(getMat, scenarios[,2], scenarios[,1], strength, SIMPLIFY = F)
+
+simulatedData = mapply(simData, trueMats, scenarios[,1], numSites, SIMPLIFY = F)
+
+save(trueMats, file = "R/simulation_setup/simulation_study_data/matrices/testMats_correctlySpecifiedRealistic.RData")
+
+save(simulatedData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_correctlySpecifiedRealistic.RData")
