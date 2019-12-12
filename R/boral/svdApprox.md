@@ -233,3 +233,49 @@ frobeniusNorm(svdApprox(trueMats[[28]],17), trueMats[[28]])
 ```
 
 ![](svdApprox_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
+
+### Nonlinear
+
+``` r
+setwd("/Users/Sara/Desktop/communityDimensions/R/simulation_setup")
+load(file="simulation_study_data/matrices/testMats_nonlinear.RData")
+
+
+
+numSpecies = 15
+numSites = 100
+
+signal = c(0.1, 0.5, 1, 2, 5)
+numFactors <- c(1, 2, 5, 10, 15)
+
+scenarios = expand.grid(numFactors = numFactors, signal=signal) ## 25
+
+lowRankApprox = vector("list",length(trueMats))
+for(i in 1:length(trueMats)){
+ 
+  lowRankApprox[[i]]=svdApprox(trueMats[[i]], scenarios[i,1])
+}
+
+
+source("metrics.R")
+```
+
+``` r
+kl <- c()
+frob <- c()
+for(i in 1:length(trueMats)){
+ # mixture= scenarios[i,3]
+  #mat = lfM[[i]]
+  #addM = perturbM[[i]]
+  #kl <- c(kl, klDivergence(lowRankApprox[[i]]+diag(nrow(lfM[[i]])), mixture*mat+(1-mixture)*solve(as.matrix(addM)) +diag(nrow(lfM[[i]])) ))
+  frob <- c(frob, frobeniusNorm(lowRankApprox[[i]], trueMats[[i]]))
+}
+
+results = cbind.data.frame(scenarios, frob)
+```
+
+``` r
+ggplot(results, aes(signal, frob))+geom_point(cex=2)+geom_line()+facet_wrap(~numFactors)+theme_minimal()
+```
+
+![](svdApprox_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
