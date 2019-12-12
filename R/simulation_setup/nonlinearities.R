@@ -44,7 +44,8 @@ simData <- function(mat, signal,  numSpecies, numSites) {
   X <- matrix(rnorm(numSites), numSites, 1) ## value for every site
   
   X.coef <- signal
-  X.shift <- matrix(rnorm(numSpecies), numSpecies, 1) ## each species gets a shift from same effect, this will introduce nonlinearity in the covariance between species
+  X.shift <- matrix(rnorm(numSpecies,sd =3), numSpecies, 1) ## each species gets a shift from same effect, this will introduce nonlinearity in the covariance between species
+  ## tried sd=5 didn't make it better
   eta <- tcrossprod(as.matrix(X), X.coef)
   
   
