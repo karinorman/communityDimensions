@@ -6,7 +6,7 @@ library(MASS)
 ## strength represents how large the covariances can be (larger means stronger relationships)
 getMat <- function(numFactors, numSpecies, strength) {
   vectors <- lapply(1:numFactors, function(x, y) {
-    runif(numSpecies, -1, y) ##  could go to rnorm() too
+    runif(numSpecies, -y, y) ##  could go to rnorm() too
   }, strength)
   
   cov <- lapply(vectors, function(x) {
@@ -59,7 +59,7 @@ simData <- function(mat, signal,  numSpecies, numSites) {
 signal = 1
 
 test1 <- simData(testMat,  signal, numSpecies, numSites)
-test1
+#test1
 
 
 ## thing that introduces more/less nonlinearity: how signal to shift magnitude differs
@@ -71,3 +71,17 @@ test1
 signal = c(0.1, 0.5, 1, 2, 5)
 numFactors <- c(1, 2, 5, 10, 20)
 
+scenarios = expand.grid(numFactors = numFactors, signal=signal) ## 25
+
+setwd("~/Desktop/communityDimensions")
+write.csv(scenarios,"R/simulation_setup/simulation_study_data/nonlinearScenarios.csv",row.names=F)
+
+
+
+trueMats = lapply( scenarios[,1], getMat,numSpecies, strength)
+
+simulatedData = mapply(simData, trueMats, scenarios[,2], numSpecies, numSites, SIMPLIFY = F)
+
+save(trueMats, file = "R/simulation_setup/simulation_study_data/matrices/testMats_nonlinear.RData")
+
+save(simulatedData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_nonlinear.RData") ## need to check

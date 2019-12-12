@@ -6,7 +6,7 @@ library(MASS)
 ## strength represents how large the covariances can be (larger means stronger relationships)
 getMat <- function(numFactors, numSpecies, strength) {
   vectors <- lapply(1:numFactors, function(x, y) {
-    runif(numSpecies, -1, y) ##  could go to rnorm() too
+    runif(numSpecies, -y, y) ##  could go to rnorm() too
   }, strength)
   
   cov <- lapply(vectors, function(x) {
