@@ -6,7 +6,7 @@ library(MASS)
 ## strength represents how large the covariances can be (larger means stronger relationships)
 getMat <- function(numFactors, numSpecies, strength) {
   vectors <- lapply(1:numFactors, function(x, y) {
-    runif(numSpecies, -1, y) ##  could go to rnorm() too
+    runif(numSpecies, -y, y) ##  could go to rnorm() too
   }, strength)
   
   cov <- lapply(vectors, function(x) {
@@ -54,19 +54,24 @@ test1
 
 
 ## keep numSites and strength fixed
+numSites <- 40
 
-numSpecies <- c(5, 10, 15, 20, 25, 30)
-numFactors <- c(1, 2, 5, 10, 20)
+numSpecies <- c( 10, 15, 20, 25, 30, 35)
+numFactors <- c(1, 2, 5, 10)
 
-scenarios = expand.grid(numSpecies, numFactors)
+## num sites = 40
+scenarios = expand.grid(numSpecies=numSpecies, numFactors=numFactors) ## 24
+
+setwd("~/Desktop/communityDimensions")
+write.csv(scenarios,"R/simulation_setup/simulation_study_data/correctSpecificationScenarios.csv",row.names=F)
 
 trueMats = mapply(getMat, scenarios[,2], scenarios[,1], strength, SIMPLIFY = F)
 
 simulatedData = mapply(simData, trueMats, scenarios[,1], numSites, SIMPLIFY = F)
 
-save(trueMats, file = "test_data/testMats_correctlySpecified.RData")
+save(trueMats, file = "R/simulation_setup/simulation_study_data/matrices/testMats_correctlySpecified.RData")
 
-save(simulatedData, file = "test_data/testData_correctlySpecified.RData")
+save(simulatedData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_correctlySpecified.RData")
 
 ## then do a more realistic example
 
@@ -74,3 +79,13 @@ numSpecies = 50
 numSites = 200
 numFactors <- c(1, 2, 5, 10, 20)
 
+scenarios = expand.grid(numSpecies=numSpecies, numFactors=numFactors) ## 5
+write.csv(scenarios,"R/simulation_setup/simulation_study_data/correctSpecificationScenariosRealistic.csv",row.names=F)
+
+trueMats = mapply(getMat, scenarios[,2], scenarios[,1], strength, SIMPLIFY = F)
+
+simulatedData = mapply(simData, trueMats, scenarios[,1], numSites, SIMPLIFY = F)
+
+save(trueMats, file = "R/simulation_setup/simulation_study_data/matrices/testMats_correctlySpecifiedRealistic.RData")
+
+save(simulatedData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_correctlySpecifiedRealistic.RData")

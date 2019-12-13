@@ -19,3 +19,26 @@ sampleMat = bdiag(block, block, block, block, block,
       block, block, block, block, block,
       block, block, block, block, block
       ) 
+
+simData <- function(mat, numSpecies,  numSites) {
+  #browser()
+  
+  sim_y <- matrix(NA, nrow = numSites, ncol = numSpecies)
+  for (i in 1:numSites) {
+    samples <- mvrnorm(1, rep(0,numSpecies), mat) ## expects covariance matrix
+    sim_y[i,] <- rbinom(numSpecies, size = 1, prob = pnorm(samples))
+  }
+  
+  return(sim_y)
+}
+
+numSpecies = 100
+numSites = 700
+
+blockData = simData(sampleMat, numSpecies, numSites)
+
+setwd("~/Desktop/communityDimensions")
+
+save(sampleMat, file = "R/simulation_setup/simulation_study_data/matrices/testMats_blockDiag.RData")
+
+save(blockData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_blockDiag.RData")

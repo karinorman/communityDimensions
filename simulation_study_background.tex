@@ -1,0 +1,151 @@
+
+\documentclass[12pt]{amsart}
+\usepackage{geometry} % see geometry.pdf on how to lay out the page. There's lots.
+\geometry{a4paper} % or letter or a5paper or ... etc
+% \geometry{landscape} % rotated page geometry
+\usepackage{hyperref}
+% See the ``Article customise'' template for come common customisations
+\usepackage{graphicx}
+\usepackage{float}
+\title{Simulation Study Background}
+\author{Sara Stoudt}
+%\date{} % delete this line to display the current date
+
+%%% BEGIN DOCUMENT
+\begin{document}
+
+\maketitle
+%\tableofcontents
+
+\section{Goals}
+
+\begin{itemize}
+\item Is dimension reduction a realistic approach for joint species distribution modeling?
+\item Does the technique of dimension reduction matter?
+\item Can we quantify how much we sacrifice in terms of some metric if the true ecology cannot be represented well by a small number of dimensions? (TO DO: define metrics!)
+
+\end{itemize}
+
+\section{Vocabulary}
+
+\begin{itemize}
+\item rank of matrix - number of ``linearly independent column vectors" (think of these as linear combinations of unobserved variables that affect relationships between species)
+
+\item low rank: correlation matrix can be described by a small (let's say $<5$) number of ``factors"
+\item sparse: precision matrix has many zeros in it (Note: a low rank matrix is not guaranteed to be sparse)
+
+\item dimension reduction: estimate a complicated relationship by distilling it into smaller number of variables (here species)
+
+\item Principal Component Analysis (PCA): dimension reduction technique, ordination methods often use this (I think), projection onto a lower dimensional space, focuses on the variances rather than the covariances, does not yield a sparse solution, closed form solution in normal case
+\item Factor Analysis: dimension reduction technique, boral (and I think to some extent hmsc) is a special case of this approach, focused on the covariances by partitioning common from unique variances, no closed form solution
+
+
+\end{itemize}
+
+\section{boral model formulation}
+
+\noindent To get some insight into the latent factor approach:
+
+\noindent site $i$ \\
+species $j$  \\ 
+latent factor $k$ \\
+%observable covariates $m$\\
+
+
+\noindent $\Phi$: CDF of standard normal
+
+\noindent observed data: $Y_{ij}$ true occurrence, assuming perfect detection 
+
+\noindent parameters: $\lambda_{jk}$
+
+\noindent random effects: $\eta_{ik}$
+
+\begin{align*}
+Y_{ij} &\sim Bern(\Phi(v_{ij})) \\
+%\mu_{ij}&=X_{i.}\beta_{.j}\\
+v_{ij} &= \eta_{i.} \lambda_{j.}' \\ 
+\eta_{i.} &\sim MVN(0, I_K)\\
+\lambda_{jk} &\sim N(0,10)\\
+%\beta_{m,j} &\sim N(0,10)\\
+\end{align*}
+
+
+%*with some constraints to ensure $\Lambda'\Lambda$ invertible
+
+\noindent Think of $\lambda_{kj}$ as species-specific coefficients for unobserved covariates $\eta_{i.}$ at the site level. They introduce correlation between species: $v_{i.} \sim MVN(0,  \Lambda \Lambda')$. 
+
+Note: ignoring fixed effects of observable covariates for now
+
+
+\vspace{.2in}
+
+Note: the following simulation scenarios are designed to test boral and HMSC, they may not be fair to ordination and PERMANOVA
+
+I think this will all come down to the nuances between PCA (related to ordination and PERMANOVA) and Factor Analysis (related to boral and hmsc). Which is a better dimension reduction technique for certain cases. Which method's assumptions match the ecology better?
+
+
+
+\section{Simulation Study Regimes}
+\subsection{Correct Specification - Data Practicalities}
+
+\begin{itemize}
+\item The model truly comes from a latent factor model. You pick the correct number of latent factors. How much data do you need to estimate the species covariance matrix well?
+
+\item Hypothesis based on relevant literature: ratio of number of species to number of sites is what matters
+\end{itemize}
+\subsection{Correct Form - Wrong Number of Latent Factors}
+
+
+\begin{itemize}
+\item What if nature cannot be well estimated by a small number of latent factors? How much does the act of dimension reduction hurt us? 
+
+\item Hypothesis based on relevant literature: based on singular value decomposition and \href{https://en.wikipedia.org/wiki/Singular_value_decomposition#Low-rank_matrix_approximation}{low rank approximations}
+\end{itemize}
+\subsection{Latent Factors + Extra}
+
+\begin{itemize}
+\item $\Lambda \Lambda'$: low rank matrix
+
+\item $\Sigma$: arbitrary precision matrix (could be sparse, medium, or dense), need to check that the rank of the inverse is large
+
+\item Perry proposed a linear combination: $a\Lambda \Lambda' + (1-a)\Sigma^{-1}$. If $a$ is small, this is more mis-specified. A denser $\Sigma$ is more mis-specified. 
+
+\end{itemize}
+
+\subsection{Non-Linearities}
+
+\begin{itemize}
+\item Perry proposed a scenario where the relationship between species is non-linear. This can be induced by having two species react to the same covariate in the same way but with a shift. If this covariate is not included in the model, then the residual covariance between them should be non-linear.
+
+
+\end{itemize}
+
+\begin{figure}[H]
+\includegraphics[width=.35\textwidth]{IMG_5092}
+\end{figure}
+
+
+\subsection{Block Diagonal (but not too close to the identity matrix)}
+
+\begin{itemize}
+\item Within a group of species, there are interactions between all of them, but there are no interactions between these species and species in other groups. 
+
+\item Will's hypothesis is that this type of matrix will not be well approximated by a latent factor model. 
+\end{itemize}
+
+\section{Instructions}
+
+\begin{itemize}
+\item You will be given a set of datasets (rows are sites, columns are species, entries are 0 or 1 for occurrence, assuming perfect detection). 
+
+\item Everyone will take ownership of one type of model. 
+
+\item  For each dataset, run the model and save all output (we haven't decided on metrics of evaluation yet, so who knows what we'll end up needing, better safe than sorry). These files might be big, so don't push them to GitHub. Just keep them locally until next semester.
+
+\item  If your method makes you choose the dimension, fit the dataset using the true dimension $d$ (number of latent factors, each dataset will be labeled), one fewer dimension ($d-1$), and one larger ($d+1$).
+
+\item  If your method automatically chooses a dimension, just run every dataset once. 
+
+\item  Note: each dataset will represent a different simulation study regime. Eventually we'll have to run many datasets per regime, so if you want to setup your workflow to accommodate that now, that would be great.
+\end{itemize}
+\end{document}

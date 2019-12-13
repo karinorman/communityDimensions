@@ -9,7 +9,7 @@ library(dplyr)
 ## strength represents how large the covariances can be (larger means stronger relationships)
 getMat <- function(numFactors, numSpecies, strength) {
   vectors <- lapply(1:numFactors, function(x, y) {
-    runif(numSpecies, -1, y) ## could go to rnorm() too
+    runif(numSpecies, -y, y) ## could go to rnorm() too
   }, strength)
   
   cov <- lapply(vectors, function(x) {
@@ -55,6 +55,7 @@ helperCreateMatrixNice <- function(sparsity, signal, d) {
 ## generate simulated given latent factor covariance and the perturbation matrix
 
 ## WARNING - hasn't been checked to make sure an increase in signal induces more misspecification, cov2cor should work, but I haven't tested it yet on my case
+## UPDATE - run through svdApprox and looks more reasonable, peaking at a=0.5 which makes sense
 simData <- function(mat, addM, mixture, numSpecies, numSites){
   #browser()
   sim_y=matrix(NA,nrow=numSites, ncol=numSpecies)
@@ -86,7 +87,10 @@ sparsity <- c(0.9, 0.5, 0.2)
 
 mixture <- seq(0, 1, by=.2) ## interpolate between latent factor matrix and perturbation matrix
 
-scenarios = expand.grid(numFactors, sparsity, mixture)
+scenarios = expand.grid(numFactors = numFactors, sparsity = sparsity, a = mixture) ## 90
+
+setwd("~/Desktop/communityDimensions")
+write.csv(scenarios,"R/simulation_setup/simulation_study_data/lowRankPlusScenarios.csv",row.names=F)
 
 
 lfM <- lapply( scenarios[,1], getMat, numSpecies, strength)
@@ -95,6 +99,7 @@ perturbM <- lapply(scenarios[,2], helperCreateMatrixNice,signal, numSpecies)
 
 simulatedData <- lapply(1:nrow(scenarios), function(x){simData(lfM[[x]], perturbM[[x]], scenarios[x,3],numSpecies, numSites)})
 
-save(lfM, file="test_data/testLFMats_lowRankPlus.RData")
-save(perturbM, file="test_data/testPerturbMats_lowRankPlus.RData")
-save(simulatedData, file="test_data/testData_lowRankPlus.RData")
+save(lfM, file="R/simulation_setup/simulation_study_data/matrices/lfPart_lowRankPlus.RData")
+save(perturbM, file="R/simulation_setup/simulation_study_data/matrices/perturbPart_lowRankPlus.RData")
+save(simulatedData, file="R/simulation_setup/simulation_study_data/observed_occurrence/testData_lowRankPlus.RData")
+
