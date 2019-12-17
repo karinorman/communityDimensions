@@ -73,6 +73,29 @@ save(trueMats, file = "R/simulation_setup/simulation_study_data/matrices/testMat
 
 save(simulatedData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_correctlySpecified.RData")
 
+#### follow up ####
+
+numSites <- 40
+
+numSpecies <- c( 10, 15, 20, 25, 30, 35)
+numFactors <- c(3,4)
+
+## num sites = 40
+scenarios = expand.grid(numSpecies=numSpecies, numFactors=numFactors) ## 24
+
+setwd("~/Desktop/communityDimensions")
+write.csv(scenarios,"R/simulation_setup/simulation_study_data/correctSpecificationScenarios2.csv",row.names=F)
+
+trueMats = mapply(getMat, scenarios[,2], scenarios[,1], strength, SIMPLIFY = F)
+
+simulatedData = mapply(simData, trueMats, scenarios[,1], numSites, SIMPLIFY = F)
+
+save(trueMats, file = "R/simulation_setup/simulation_study_data/matrices/testMats_correctlySpecified2.RData")
+
+save(simulatedData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_correctlySpecified2.RData")
+
+
+
 ## then do a more realistic example
 
 numSpecies = 50
