@@ -2,12 +2,237 @@
 %% http://bibdesk.sourceforge.net/
 
 
-%% Created for Sara Stoudt at 2020-01-16 11:39:24 -0800 
+%% Created for Sara Stoudt at 2020-01-16 13:57:20 -0800 
 
 
 %% Saved with string encoding Unicode (UTF-8) 
 
 
+
+@article{Hui16,
+	Annote = {builds off of HuiEtAl15
+
+how species composition varies across sites,
+and whether these differences can be explained by environmental covariates, treatments and so on
+
+Model-based methods provide a data-generating
+process and consequently a likelihood function that can be
+tailored to match the ecological processes and questions of
+interest. This is in contrast to distance-based methods, which
+focus more on describing the multivariate geometry of the
+data.
+
+Without
+covariates, we can fit pure latent variable models in which species are regressed against a set of unknown covariates, leading
+to unconstrained ordination for visualizing site and species
+patterns. With covariates, we can fit correlated response models that combine separate species generalized linear models
+with latent variables to account for residual correlation, for
+example due to biotic interactions, missing covariates. This
+facilitates community-level inference about environmental
+covariates and treatments while controlling for extraneous correlation between species, as well as providing a method of
+`residual ordination'; },
+	Author = {Hui, F. K. C.},
+	Date-Added = {2020-01-16 13:39:24 -0800},
+	Date-Modified = {2020-01-16 13:39:54 -0800},
+	Journal = {Methods in Ecology and Evolution},
+	Keywords = {boral},
+	Pages = {744-750},
+	Title = {BORAL - Bayesian Ordination and Regression Analysis of Multivariate Abundance Data in R},
+	Volume = {7},
+	Year = {2016}}
+
+@article{HuiEtAl15,
+	Annote = {Methods of unconstrained ordination currently used, such as non-metric multidimensional scaling, are algo-rithm-based techniques developed and implemented withoutdirectly accommodating the statistical properties ofthe data at hand. Failure to account for these key data properties can lead to misleading results.
+
+In this study, we con-sider ordinations using the response data alone, withoutinput from predictor (or `environmental') variables. This isoftenreferredtoasunconstrained ordination
+
+By far, the most common method of unconstrained ordina-tion in ecology is non-metric multidimensional scaling (nMDS,Kruskal , 1964a, b), an algorithm-based technique which itera-tively repositions points until the relative distances in theordination have the strongest possible monotonic fit to thepairwise dissimilarities between sites, as computed using somedissimilarity measure of the (possibly transformed) data. Arelated method, known as principal coordinate analysis(PCoA, Gower 1966), constructs an ordination by applying asingular value decomposition to a pre-prepared matrix ofapri-oripairwise dissimilarities. PCoA forms the basis for a numberof multivariate methods currently used in ecology (Legendre &Anderson 1999; Anderson 2001; Anderson & Willis 2003), allof which can be understood as fitting linear models to principalcoordinates. One particular choice of PCoA is correspondenceanalysis (CA, Hill 1974), which can be understood as PCoAusing the chi-squared dissimilarity measure along with somepre-specified scaling of site and/or species totals
+
+All of these methods are algorithm-based techniques to ordina-tion, in that they process the data in a series of steps (an algo-rithm) to extract meaning without reference to someunderlying statistical model.
+
+
+In eqn (1), the termbjaccounts for the differences in mean(and hence variance) across species, due to their different abun-dance (or for presence/absence data, their different species rela-tive frequency). This is what standardizing variables in nMDSattempts to do.
+
+Whether or not the site effects should be included in themodel separately or subsumed into the ordinations dependsto some extent on the ecological question of interest. Inparticular, it depends on whether compositional changealone is of interest or changes in total abundance (speciesrichness) also
+
+The mixture model (MM) approach of Pledger & Arnold(2014) produces an ordination indirectly by classifying species.Here, we propose an alternative to model-based ordinationwhich directly captures the position of sites along some under-lying ecological gradient.
+
+we assume a knownmean--variance relationship
+
+Conditional on the (unknown) latentvariables, the model is a GLM, assuming that species arelinearly related to the underlying latent variables.
+
+Treating the site effects as random has the advantage ofreducing the number of model parameters, so that it would notincrease as sample size increases.
+
+In the LVM formulation above, the inclusion of both siteaiand speciesbjeffects ensures the ordination coordinatesziarestandardized for site total abundance and species prevalence,
+
+Sitesare assumed to be normally distributed along the gradient, andspecies are assumed to be linearly related to position along thisgradient, although as previously mentioned the method isrobust to violation of these assumptions
+
+
+
+},
+	Author = {Hui, F. K. C. and Taskinen, S. and Pledger, S. and Foster, S. D. and Warton, D. I.},
+	Date-Added = {2020-01-16 13:38:47 -0800},
+	Date-Modified = {2020-01-16 13:53:31 -0800},
+	Journal = {Methods in Ecology and Evolution},
+	Keywords = {boral},
+	Pages = {399-411},
+	Title = {Model-based approaches to unconstrained ordination},
+	Volume = {6},
+	Year = {2015}}
+
+@article{NabeNeilsenEtAl17,
+	Annote = {Latent variable models showed that 23.0% of the variation in community composition was explained by variables related to topography, while distance to the inland ice explained an additional 6.4 %. 
+
+We quantified the extent to which the species covariation was explained by the five environmental covariates based on the change in marginal log‐likelihood relative to a model without these covariates (i.e. an unconstrained ordination with only the two latent variables included). },
+	Author = {Nabe-Nielsen, J. and Normand, S. and Hui, F. K. C. and Stewart, L. and Bay, C. and Nabe-Nielsen, L. I. and Schmidt, N. M.},
+	Date-Added = {2020-01-16 13:36:41 -0800},
+	Date-Modified = {2020-01-16 13:38:40 -0800},
+	Journal = {Ecology and Evolution},
+	Keywords = {boral},
+	Number = {23},
+	Pages = {10233-10242},
+	Title = {Plant community composition and species richness in the High Arctic tundra: From the present to the future},
+	Volume = {7},
+	Year = {2017}}
+
+@article{BalintEtAl18,
+	Annote = {The community composition effects were visualized with a latent variable model‐based ordination performed with the boral R package
+
+We fitted linear mixed‐effect models with lme4 (Bates, M{\"a}chler, Bolker, & Walker, 2015) on extracted DNA concentration, PCR efficiency, and measures of diversity (the first three integers from Hill's diversity series (Hill, 1973) to estimate the effects of potential laboratory biases and biological factors of interests. },
+	Author = {Balint, M. and Marton, O. and Schatz, M. and During, R. and Grossart, H.},
+	Date-Added = {2020-01-16 13:34:36 -0800},
+	Date-Modified = {2020-01-16 13:36:24 -0800},
+	Journal = {Ecology and Evolution},
+	Keywords = {boral},
+	Number = {3},
+	Pages = {1786-1793},
+	Title = {Proper experimental design requires randomization/balancing of molecular ecology experiments},
+	Volume = {8},
+	Year = {2018}}
+
+@article{ZhangEtAl18,
+	Annote = {his study systematically evaluated the performances of five JSDMs in predicting the occurrence and biomass of multiple species, with a particular focus on diverse characteristics of sampling data, including type of response variables, number of sampling sites, and the number of species included in models. In general, most models yielded satisfactory performances on fitting to observed data and on the estimation of environmental effects; however, they showed less well performances in evaluating species associations, and their predictability had large variations. The JSDMs showed inconsistent performances between the goodness‐of‐fit and predictability in cross‐validation, and the Boral model was relatively robust than others. The predictability of JSDMs was less influenced by sample sizes and substantially improved by incorporating rare species.},
+	Author = {Zhang, C. and Chen, Y. and Xu, B. and Xue, Y. and Ren, Y.},
+	Date-Added = {2020-01-16 13:33:15 -0800},
+	Date-Modified = {2020-01-16 13:34:18 -0800},
+	Journal = {Ecography},
+	Keywords = {boral},
+	Number = {11},
+	Pages = {1876-1887},
+	Title = {Comparing the prediction of joint species distribution models with respect to characteristics of sampling data},
+	Volume = {41},
+	Year = {2018}}
+
+@article{MaynardEtAl18,
+	Annote = {factorial experiment on fungus
+
+Co‐occurrence patterns were estimated via latent‐variable Bayesian Markov chain Monte Carlo (MCMC) methods using the boral package in R (Hui 2016). This approach partitions pairwise associations into an environmental‐based component, which reflects shared responses to environmental gradients, and a residual component, which captures unmeasured species relationships after accounting for environmental conditions (Warton et al. 2015).
+
+This community‐level co‐occurrence metric was first calculated using the residual correlation matrix, which is referred to as the proportion of ``biotic'' positive associations. This same process was then repeated using the environmental correlation matrix, yielding an estimate of the proportion of species with shared environmental preferences (referred to as ``abiotic'' associations).},
+	Author = {Maynard, D. S. and Covey, K. R. and Crowther, T. W. and Sokol, N. W. and Morrison, E. W. and Frey, S. D. and van Diepen, L. T. A. and Bradford, M. A.},
+	Date-Added = {2020-01-16 13:30:24 -0800},
+	Date-Modified = {2020-01-16 13:32:29 -0800},
+	Journal = {Ecology},
+	Keywords = {boral},
+	Number = {4},
+	Pages = {801-811},
+	Title = {Species associations overwhelm abiotic conditions to dictate the structure and function of wood‐decay fungal communities},
+	Volume = {99},
+	Year = {2018}}
+
+@article{InoueEtAl17,
+	Annote = {We used joint species distribution models (JSDMs) to investigate the relative importance of abiotic and biotic factors that are responsible for the distribution and co‐occurrence of species in riverine ecosystems.
+
+Because correlation between species co‐occurrence can be due to species' abiotic responses and/or other residual correlations (e.g. unknown abiotic variables, biotic interactions; Warton et al., 2015), the latent variables in the CRM can be interpreted as variables accounting for any residual covariation not explained by the abiotic covariates (Hui, 2016).
+
+First, we used species occurrence data only to fit a LVM with two latent variables and constructed an unconstrained biplot to visualize site and species patterns. We then added abiotic covariates in a CRM to construct a residual biplot after controlling for the effect of abiotic variables. From the CRM, we also examined the sign and the strength of significant correlations between species co‐occurrence due to abiotic response and the residual correlations, as based on the 95% credible intervals excluding zero. Furthermore, by taking a proportional difference in the trace of the estimated residual covariate matrix between the LVM and CRM, we determined how much of species co‐occurrence is explained by abiotic covariates },
+	Author = {Inoue, K. and Stoeckl, K. and Geist, J.},
+	Date-Added = {2020-01-16 13:11:28 -0800},
+	Date-Modified = {2020-01-16 13:12:56 -0800},
+	Journal = {Diversity and Distributions},
+	Keywords = {boral},
+	Number = {3},
+	Pages = {284-296},
+	Title = {Joint species models reveal the effects of environment on community assemblage of freshwater mussels and fishes in European rivers},
+	Volume = {23},
+	Year = {2017}}
+
+@article{BrownEtAl17,
+	Annote = {Here we examine multiple causal hypotheses for
+the interacting effects of fishing pressure and turbidity on a coral reef fish assemblages
+
+Initially, we explored the response of benthic habitats to turbidity using Bayesian ordination and re -
+gression analysis (Hui et al. 2015). Bayesian ordination is a multivariate ordination technique that allows
+for response variables that are not normally distributed and also allows for the inclusion of fixed effects
+that constrain the ordination. Thus, we can quantify
+the response of benthic groups to turbidity directly,
+while accounting for unexplained corre lations in the
+cover of benthic groups. 
+
+We also fit a
+latent variable model without turbidity, so we could
+estimate the amount of covariation in benthic cover
+that is explained by turbidity. },
+	Author = {Brown, C. J. and Jupiter, S. D. and Lin, H. and Albert, S. and Klein, C. and Maina, J. M. and Tulloch, V. J. D. and Wenger, A. S. and Mumby, P. J.},
+	Date-Added = {2020-01-16 13:06:15 -0800},
+	Date-Modified = {2020-01-16 13:09:42 -0800},
+	Journal = {Marine Ecology Progress Series},
+	Keywords = {boral},
+	Pages = {55-68},
+	Title = {Habitat change mediates the response of coral reef fish populations to terrestrial run-off},
+	Volume = {576},
+	Year = {2017}}
+
+@article{ParsonsEtAl16,
+	Annote = {We used a latent variable model
+(LVM) to create an unconstrained ordination to visualise the main trends between reef sites, in terms of
+their species composition 
+
+The role of the
+latent variables in LVMs is to account for unknown or
+unmeasured variables, and, by inducing correlations
+between taxa, enable an unconstrained ordination
+for visualising site and species patterns
+
+The response of species composition to
+habitat factors was measured using multivariate generalised linear modelling and latent variable
+modelling.},
+	Author = {Parsons, D. F. and Suthers, I. M. and Cruz, D. O. and Smith, J. A.},
+	Date-Added = {2020-01-16 12:33:10 -0800},
+	Date-Modified = {2020-01-16 12:34:39 -0800},
+	Journal = {Marine Ecology Progress Series},
+	Keywords = {boral},
+	Pages = {155-171},
+	Title = {Effects of habitat on fish abundance and species composition on temperate rocky reefs},
+	Volume = {561},
+	Year = {2016}}
+
+@article{HansenEtAl16,
+	Annote = {investigate how arthropod assemblages of spiders and beetles respond to variation in habitat structure at small spatial scales
+
+``We modelled arthropod species' distributions with two latent variables to enable visualization comparable to a two dimensional NMDS. From the latent variable model, we extracted the posterior median values of the latent variables which we used as coordinates on ordination axes to represent species composition at plot level (Hui et al., 2015). We then tested the difference in local species composition based on these coordinates between the paired samples (fen-heath or shrub-heath) for each transect using paired t-tests.''},
+	Author = {Hansen, R. R. and Hansen, O. L. P. and Bowden, J. J. and Treier, U. A. and Normand, S. and Hoye, T.},
+	Date-Added = {2020-01-16 12:29:28 -0800},
+	Date-Modified = {2020-01-16 12:31:33 -0800},
+	Journal = {PeerJ},
+	Keywords = {boral},
+	Title = {Meter scale variation in shrub dominance and soil moisture structure Arctic arthropod communities},
+	Year = {2016}}
+
+@article{DAmenETAl17,
+	Annote = {Understanding the causes of species co‐occurrence patterns 
+
+``We used the function `boral' to first fit a pure latent variable model (mimicking a classic null model) and then a model including both environmental covariates and latent variables (mimicking an environmentally‐constrained null model). Thus, based on the significant residual and environmental correlations, we were able to use JSDM to classify species pairs as random or associated, with further discrimination of segregation or aggregation resulting from habitat filtering and/or biotic interactions''},
+	Author = {D'Amen, M. and Mod, H. K. and Gotelli, N. J. and Guisan, A.},
+	Date-Added = {2020-01-16 12:25:58 -0800},
+	Date-Modified = {2020-01-16 12:31:38 -0800},
+	Journal = {Ecography},
+	Keywords = {boral},
+	Number = {8},
+	Pages = {1233-1244},
+	Title = {Disentangling biotic interactions, environmental filters, and dispersal limitation as drivers of species co‐occurrence},
+	Volume = {41},
+	Year = {2017}}
 
 @article{BerlowEtAl99,
 	Author = {Berlow, E. L. and Navarrete, S. A. and Briggs, C. J. and Power, M. E. and Menge, B. A.},
