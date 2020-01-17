@@ -4,7 +4,9 @@
 ## groups of species are related to one another but no other groups
 ## Will hypothesizes that a low rank model will have a hard time estimating this with only a few latent factors
 
-require(Matrix)
+library(mvtnorm)
+library(Matrix)
+library(MASS)
 
 bdiag(Diagonal(2), matrix(1:3, 3,4), diag(3:2))
 
@@ -19,6 +21,10 @@ sampleMat = bdiag(block, block, block, block, block,
       block, block, block, block, block,
       block, block, block, block, block
       ) 
+
+sampleMat = bdiag(block, block, block, block, block,
+                  block, block, block, block, block
+) 
 
 simData <- function(mat, numSpecies,  numSites) {
   #browser()
@@ -35,10 +41,17 @@ simData <- function(mat, numSpecies,  numSites) {
 numSpecies = 100
 numSites = 700
 
+numSpecies=50
+numSites=350
+
 blockData = simData(sampleMat, numSpecies, numSites)
 
 setwd("~/Desktop/communityDimensions")
 
 save(sampleMat, file = "R/simulation_setup/simulation_study_data/matrices/testMats_blockDiag.RData")
 
+save(sampleMat, file = "R/simulation_setup/simulation_study_data/matrices/testMats_blockDiagSmall.RData")
+
 save(blockData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_blockDiag.RData")
+
+save(blockData, file = "R/simulation_setup/simulation_study_data/observed_occurrence/testData_blockDiagSmall.RData")
